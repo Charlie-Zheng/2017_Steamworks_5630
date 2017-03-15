@@ -1,6 +1,16 @@
 package org.usfirst.frc.team5630.robot;
 
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.Talon;
+
+import com.ctre.CANTalon;
+import com.ctre.CANTalon.TalonControlMode;
+
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -12,10 +22,31 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	// Variable declarations
 	final String defaultAuto = "Default";
 	final String customAuto = "My Auto";
 	String autoSelected;
 	SendableChooser<String> chooser = new SendableChooser<>();
+	CANTalon rightSRX, shooter1, shooter2;
+	CANTalon leftSRX;
+	Talon rightMotor, leftMotor, intakeMotor, indexMotor, climberMotor, tempRightSRX;
+	Joystick joystick1, joystick2;
+	double rightX1, rightY1, leftTrigger1, rightTrigger1, leftX1, leftY1;
+	boolean buttonA1, buttonB1, buttonX1, buttonY1, buttonRB1, buttonLB1, buttonLeftStickClick1, buttonRightStickClick1,
+			buttonBack1, buttonStart1;
+	boolean buttonALast1, buttonBLast1, buttonXLast1, buttonYLast1, buttonRBLast1, buttonLBLast1, buttonLeftStickClickLast1,
+			buttonRightStickClickLast1, buttonBackLast1, buttonStartLast1;
+	double rightX2, rightY2, leftTrigger2, rightTrigger2, leftX2, leftY2;
+	boolean buttonA2, buttonB2, buttonX2, buttonY2, buttonRB2, buttonLB2, buttonLeftStickClick2, buttonRightStickClick2,
+			buttonBack2, buttonStart2;
+	int buttonDPad2;
+	boolean buttonALast2, buttonBLast2, buttonXLast2, buttonYLast2, buttonRBLast2, buttonLBLast2, buttonLeftStickClickLast2,
+			buttonRightStickClickLast2, buttonBackLast2, buttonStartLast2;
+	int buttonDPadLast2;
+	double shooterSpeed;
+	boolean shooterToggle, intakeToggle;
+	int numberOfPWMisZeroinARow;
+	RobotDrive robotDrive;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -25,7 +56,38 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
+
 		SmartDashboard.putData("Auto choices", chooser);
+		shooter1 = new CANTalon(1);
+		shooter2 = new CANTalon(2);
+		leftSRX = new CANTalon(3);
+		tempRightSRX = new Talon(4);
+		leftMotor = new Talon(2);
+		//rightSRX = new CANTalon(4);
+		rightMotor = new Talon(0);
+		indexMotor = new Talon(1);
+		// climberMotor = new Talon(2);
+		intakeMotor = new Talon(3);
+
+		joystick1 = new Joystick(0);
+		joystick2 = new Joystick(1);
+		// intakeMotor.setInverted(true);
+		intakeMotor.setInverted(true);
+		indexMotor.setInverted(true);
+		shooter1.setInverted(false);
+		shooter2.setInverted(false);
+		leftSRX.setInverted(false);
+		tempRightSRX.setInverted(false);
+		leftMotor.setInverted(false);
+//		rightSRX.setInverted(false);
+		rightMotor.setInverted(false);
+//		rightSRX.configPeakOutputVoltage(12.0f, -12.0f);
+		leftSRX.configPeakOutputVoltage(12.0f, -12.0f);
+		numberOfPWMisZeroinARow = 0;
+		robotDrive = new RobotDrive(leftSRX, leftMotor, tempRightSRX, rightMotor);
+
+		// shooter1.setInverted(false);
+		// shooter2.setInverted(false);
 	}
 
 	/**
@@ -67,7 +129,88 @@ public class Robot extends IterativeRobot {
 	 * This function is called periodically during operator control
 	 */
 	@Override
+	public void teleopInit() {
+		//rightSRX.changeControlMode(TalonControlMode.PercentVbus); // Changes to
+																	// % Voltage
+		leftSRX.changeControlMode(TalonControlMode.PercentVbus);
+		shooterToggle = false;
+		intakeToggle = false;
+		shooter2.changeControlMode(TalonControlMode.Follower);
+		shooter2.set(1);
+
+		robotDrive.setExpiration(0.2);
+		//robotDrive = new RobotDrive(leftSRX, leftMotor, rightSRX, rightMotor);// front
+																				// left,
+																				// rear
+																				// left,
+																				// front
+																				// right,
+																				// rear
+																				// right
+
+		shooterSpeed = 0.5;
+	}
+
+	@Override
 	public void teleopPeriodic() {
+		//double start = System.currentTimeMillis();
+		getInputs(); //Gets joystick inputs
+
+		if (buttonA2 != buttonALast2 && buttonA2) {// Checks if button A was clicked shooterToggle = !shooterToggle;
+			//System.out.println("ShooterToggle: " + shooterToggle);
+			shooterToggle = !shooterToggle;
+		}
+		if (buttonRB2 != buttonRBLast2 && buttonRB2){
+			intakeToggle = !intakeToggle;
+		}
+
+		/*
+		 * if(buttonRB = true){//Checks if button A was clicked
+		 * indexMotor.set(1); }
+		 */
+
+		// intakeMotor.set(rightTrigger);//Runs intake with right trigger speed
+
+		/*
+		 * if(shooterToggle){ shooter1.set(0.4); shooter2.set(0.4); }else{
+		 * shooter1.set(0); shoot
+		 */
+
+		// climberMotor.set(leftTrigger);
+		if(buttonDPad2!=buttonDPadLast2 && buttonDPad2!=-1){
+			if(buttonDPad2 == 0 && shooterSpeed!=0.6){
+				shooterSpeed+=0.05;
+			}else if (buttonDPad2 == 180 && shooterSpeed != 0.1){
+				shooterSpeed-=0.05;
+			}
+		}
+		
+		robotDrive.arcadeDrive(-leftY1, rightX1);
+		//System.out.println();
+		if (shooterToggle){
+			shooter1.set(shooterSpeed);
+			System.out.println(shooterSpeed);
+		}else{
+			shooter1.set(0);
+		}
+//		if(intakeToggle){
+//			intakeMotor.set(1);
+//		}else{
+//			intakeMotor.set(0);
+//		}
+		intakeMotor.set(rightTrigger2);
+		indexMotor.set(leftTrigger2);
+		// leftMotor.set(leftSRX.getOutputVoltage()/leftSRX.getBusVoltage());
+		// rightMotor.set(rightSRX.getOutputVoltage()/rightSRX.getBusVoltage());
+		// System.out.println("Output of left SRX: " +
+		// leftSRX.getOutputVoltage() + "\t Output of right SRX: " +
+		// rightSRX.getOutputVoltage());
+		// System.out.println("PWM of left: " +
+		// leftSRX.getOutputVoltage()/leftSRX.getBusVoltage() + "PWM of right: "
+		// + rightSRX.getOutputVoltage()/rightSRX.getBusVoltage());
+	
+		getLastInputs();
+	//	System.out.println("Time for one cycle: " + (System.currentTimeMillis()-start));
 	}
 
 	/**
@@ -75,6 +218,64 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
+
+	}
+	private void getLastInputs(){
+		buttonALast1 = buttonA1;
+		buttonBLast1 = buttonB1;
+		buttonXLast1 = buttonX1;
+		buttonYLast1 = buttonY1;
+		buttonLBLast1 = buttonLB1;
+		buttonRBLast1 = buttonRB1;
+		buttonBackLast1 = buttonBack1;
+		buttonStartLast1 = buttonStart1;
+		buttonLeftStickClickLast1 = buttonLeftStickClick1;
+		buttonRightStickClickLast1 = buttonRightStickClick1;
+		buttonALast2 = buttonA2;
+		buttonBLast2 = buttonB2;
+		buttonXLast2 = buttonX2;
+		buttonYLast2 = buttonY2;
+		buttonLBLast2 = buttonLB2;
+		buttonRBLast2 = buttonRB2;
+		buttonBackLast2 = buttonBack2;
+		buttonStartLast2 = buttonStart2;
+		buttonLeftStickClickLast2 = buttonLeftStickClick2;
+		buttonRightStickClickLast2 = buttonRightStickClick2;
+		buttonDPadLast2 = buttonDPad2;
+	}
+	private void getInputs(){
+		leftX1 = joystick1.getRawAxis(0);
+		leftY1 = joystick1.getRawAxis(1);
+		rightX1 = joystick1.getRawAxis(4);
+		rightY1 = joystick1.getRawAxis(5);
+		leftTrigger1 = joystick1.getRawAxis(2);
+		rightTrigger1 = joystick1.getRawAxis(3);
+		buttonA1 = joystick1.getRawButton(1);
+		buttonB1 = joystick1.getRawButton(2);
+		buttonX1 = joystick1.getRawButton(3);
+		buttonY1 = joystick1.getRawButton(4);
+		buttonLB1 = joystick1.getRawButton(5);
+		buttonRB1 = joystick1.getRawButton(6);
+		buttonBack1 = joystick1.getRawButton(7);
+		buttonStart1 = joystick1.getRawButton(8);
+		buttonLeftStickClick1 = joystick1.getRawButton(9);
+		buttonRightStickClick1 = joystick1.getRawButton(10);
+		leftX2 = joystick2.getRawAxis(0);
+		leftY2 = joystick2.getRawAxis(2);
+		rightX2 = joystick2.getRawAxis(4);
+		rightY2 = joystick2.getRawAxis(5);
+		leftTrigger2 = joystick2.getRawAxis(2);
+		rightTrigger2 = joystick2.getRawAxis(3);
+		buttonA2 = joystick2.getRawButton(1);
+		buttonB2 = joystick2.getRawButton(2);
+		buttonX2 = joystick2.getRawButton(3);
+		buttonY2 = joystick2.getRawButton(4);
+		buttonLB2 = joystick2.getRawButton(5);
+		buttonRB2 = joystick2.getRawButton(6);
+		buttonBack2 = joystick2.getRawButton(7);
+		buttonStart2 = joystick2.getRawButton(8);
+		buttonLeftStickClick2 = joystick2.getRawButton(9);
+		buttonRightStickClick2 = joystick2.getRawButton(10);
+		buttonDPad2 = joystick2.getPOV();
 	}
 }
-
