@@ -30,7 +30,7 @@ public class Robot extends IterativeRobot {
 	CANTalon rightSRX0, shooter1, shooter2;
 	CANTalon leftSRX0;
 	CANTalon leftSRX1, rightSRX1, leftSRX2, rightSRX2;
-	CANTalon intakeMotor, indexMotor;
+	CANTalon intakeMotor, indexMotor, armMotor;
 	Joystick joystick1, joystick2;
 	double rightX1, rightY1, leftTrigger1, rightTrigger1, leftX1, leftY1;
 	boolean buttonA1, buttonB1, buttonX1, buttonY1, buttonRB1, buttonLB1, buttonLeftStickClick1, buttonRightStickClick1,
@@ -59,16 +59,17 @@ public class Robot extends IterativeRobot {
 		chooser.addObject("My Auto", customAuto);
 
 		SmartDashboard.putData("Auto choices", chooser);
-		shooter1 = new CANTalon(1);
-		rightSRX2 = new CANTalon(2);
-		rightSRX1 = new CANTalon(3);
-		rightSRX0 = new CANTalon(4);
-		leftSRX1 = new CANTalon(5);
-		leftSRX2 = new CANTalon(6);
-		leftSRX0 = new CANTalon(7);
-		shooter2 = new CANTalon(8);
+		leftSRX1 = new CANTalon(1);
+		leftSRX2 = new CANTalon(2);
+		leftSRX0 = new CANTalon(3);
+		shooter1 = new CANTalon(4);
+		shooter2 = new CANTalon(5);
+		rightSRX2 = new CANTalon(6);
+		rightSRX1 = new CANTalon(7);
+		rightSRX0 = new CANTalon(8);
 		intakeMotor = new CANTalon(9);
-		indexMotor = new CANTalon(11);
+		indexMotor = new CANTalon(10);
+		armMotor = new CANTalon(11);
 		joystick1 = new Joystick(0);
 		joystick2 = new Joystick(1);
 		// intakeMotor.setInverted(true);
@@ -98,7 +99,8 @@ public class Robot extends IterativeRobot {
 		rightSRX2.changeControlMode(TalonControlMode.Follower);
 		rightSRX1.set(rightSRX0.getDeviceID());
 		rightSRX2.set(rightSRX0.getDeviceID());
-		
+		shooter2.changeControlMode(TalonControlMode.Follower);
+		shooter2.set(shooter1.getDeviceID());
 		// shooter1.setInverted(false);
 		// shooter2.setInverted(false);
 	}
@@ -149,10 +151,6 @@ public class Robot extends IterativeRobot {
 		leftSRX0.changeControlMode(TalonControlMode.PercentVbus);
 		shooterToggle = false;
 		intakeToggle = false;
-		shooter2.changeControlMode(TalonControlMode.Follower);
-		shooter2.set(1);
-
-		robotDrive.setExpiration(0.2);
 		// robotDrive = new RobotDrive(leftSRX, leftMotor, rightSRX,
 		// rightMotor);// front
 		// left,
