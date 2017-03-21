@@ -3,12 +3,14 @@ package org.usfirst.frc.team5630.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
+import edu.wpi.first.wpilibj.buttons.Trigger;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Talon;
 
 import com.ctre.CANTalon;
+import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -27,8 +29,8 @@ public class Robot extends IterativeRobot {
 	final String customAuto = "My Auto";
 	String autoSelected;
 	SendableChooser<String> chooser = new SendableChooser<>();
-	CANTalon rightSRX0, shooter1, shooter2;
-	CANTalon leftSRX0;
+	CANTalon rightSRX3, shooter1, shooter2;
+	CANTalon leftSRX3;
 	CANTalon leftSRX1, rightSRX1, leftSRX2, rightSRX2;
 	CANTalon intakeMotor, indexMotor, armMotor;
 	Joystick joystick1, joystick2;
@@ -40,10 +42,10 @@ public class Robot extends IterativeRobot {
 	double rightX2, rightY2, leftTrigger2, rightTrigger2, leftX2, leftY2;
 	boolean buttonA2, buttonB2, buttonX2, buttonY2, buttonRB2, buttonLB2, buttonLeftStickClick2, buttonRightStickClick2,
 			buttonBack2, buttonStart2;
-	int buttonDPad2;
+	int buttonDPad1, buttonDPad2;
 	boolean buttonALast2, buttonBLast2, buttonXLast2, buttonYLast2, buttonRBLast2, buttonLBLast2,
 			buttonLeftStickClickLast2, buttonRightStickClickLast2, buttonBackLast2, buttonStartLast2;
-	int buttonDPadLast2;
+	int buttonDPadLast1, buttonDPadLast2;
 	double shooterSpeed;
 	boolean shooterToggle, intakeToggle;
 	int numberOfPWMisZeroinARow;
@@ -61,12 +63,12 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putData("Auto choices", chooser);
 		leftSRX1 = new CANTalon(1);
 		leftSRX2 = new CANTalon(2);
-		leftSRX0 = new CANTalon(3);
+		leftSRX3 = new CANTalon(3);
 		shooter1 = new CANTalon(4);
 		shooter2 = new CANTalon(5);
-		rightSRX2 = new CANTalon(6);
-		rightSRX1 = new CANTalon(7);
-		rightSRX0 = new CANTalon(8);
+		rightSRX1 = new CANTalon(6);
+		rightSRX2 = new CANTalon(7);
+		rightSRX3 = new CANTalon(8);
 		intakeMotor = new CANTalon(9);
 		indexMotor = new CANTalon(10);
 		armMotor = new CANTalon(11);
@@ -75,30 +77,36 @@ public class Robot extends IterativeRobot {
 		// intakeMotor.setInverted(true);
 		intakeMotor.setInverted(true);
 		indexMotor.setInverted(true);
-		shooter1.setInverted(false);
-		shooter2.setInverted(false);
-		leftSRX0.setInverted(false);
+		shooter1.setInverted(true);
+		shooter2.setInverted(true);
+		shooter1.reverseSensor(false);
+		leftSRX3.setInverted(false);
 		leftSRX1.setInverted(false);
 		leftSRX2.setInverted(false);
-		rightSRX0.setInverted(false);
+		rightSRX3.setInverted(false);
 		rightSRX1.setInverted(false);
 		rightSRX2.setInverted(false);
-		rightSRX0.configPeakOutputVoltage(12.0f, -12.0f);
+		rightSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX1.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX2.configPeakOutputVoltage(12.0f, -12.0f);
-		leftSRX0.configPeakOutputVoltage(12.0f, -12.0f);
+		leftSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		leftSRX1.configPeakOutputVoltage(12.0f, -12.0f);
 		leftSRX2.configPeakOutputVoltage(12.0f, -12.0f);
+		shooter1.configPeakOutputVoltage(12.0f, -12.0f);
+		shooter2.configPeakOutputVoltage(12.0f, -12.0f);
 		numberOfPWMisZeroinARow = 0;
-		robotDrive = new RobotDrive(leftSRX0, rightSRX0);
-		leftSRX1.changeControlMode(TalonControlMode.Follower);
+		robotDrive = new RobotDrive(leftSRX1, rightSRX1);
+		leftSRX3.changeControlMode(TalonControlMode.Follower);
 		leftSRX2.changeControlMode(TalonControlMode.Follower);
-		leftSRX1.set(leftSRX0.getDeviceID());
-		leftSRX2.set(leftSRX0.getDeviceID());
-		rightSRX1.changeControlMode(TalonControlMode.Follower);
+		leftSRX3.set(leftSRX1.getDeviceID());
+		leftSRX2.set(leftSRX1.getDeviceID());
+		rightSRX3.changeControlMode(TalonControlMode.Follower);
 		rightSRX2.changeControlMode(TalonControlMode.Follower);
-		rightSRX1.set(rightSRX0.getDeviceID());
-		rightSRX2.set(rightSRX0.getDeviceID());
+		rightSRX3.set(rightSRX1.getDeviceID());
+		rightSRX2.set(rightSRX1.getDeviceID());
+		shooter1.changeControlMode(TalonControlMode.Speed);
+		shooter1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+		shooter1.configEncoderCodesPerRev(4096);
 		shooter2.changeControlMode(TalonControlMode.Follower);
 		shooter2.set(shooter1.getDeviceID());
 		// shooter1.setInverted(false);
@@ -148,7 +156,8 @@ public class Robot extends IterativeRobot {
 		// rightSRX.changeControlMode(TalonControlMode.PercentVbus); // Changes
 		// to
 		// % Voltage
-		leftSRX0.changeControlMode(TalonControlMode.PercentVbus);
+		leftSRX3.changeControlMode(TalonControlMode.PercentVbus);
+		shooter1.changeControlMode(TalonControlMode.PercentVbus);
 		shooterToggle = false;
 		intakeToggle = false;
 		// robotDrive = new RobotDrive(leftSRX, leftMotor, rightSRX,
@@ -160,7 +169,7 @@ public class Robot extends IterativeRobot {
 		// right,
 		// rear
 		// right
-
+		// shooter2.changeControlMode(TalonControlMode.PercentVbus);
 		shooterSpeed = 0.5;
 	}
 
@@ -178,6 +187,8 @@ public class Robot extends IterativeRobot {
 		if (buttonRB2 != buttonRBLast2 && buttonRB2) {
 			intakeToggle = !intakeToggle;
 		}
+
+		armMotor.set((rightTrigger1 - leftTrigger1) / 2);
 
 		/*
 		 * if(buttonRB = true){//Checks if button A was clicked
@@ -213,8 +224,17 @@ public class Robot extends IterativeRobot {
 		// }else{
 		// intakeMotor.set(0);
 		// }
-		intakeMotor.set(rightTrigger2);
-		indexMotor.set(leftTrigger2);
+		if (buttonRB1) {
+			indexMotor.set(0.5);
+		} else {
+			indexMotor.set(0);
+		}
+		if (buttonLB1) {
+			intakeMotor.set(1);
+		} else {
+			intakeMotor.set(0);
+		}
+
 		// leftMotor.set(leftSRX.getOutputVoltage()/leftSRX.getBusVoltage());
 		// rightMotor.set(rightSRX.getOutputVoltage()/rightSRX.getBusVoltage());
 		// System.out.println("Output of left SRX: " +
@@ -232,9 +252,53 @@ public class Robot extends IterativeRobot {
 	/**
 	 * This function is called periodically during test mode
 	 */
+	int startEncoderTicks;
+	double P = 0.01;
+	double I = 0.01;
+	double D = 0;
+	double F = 0;
+
+	public void testInit() {
+		startEncoderTicks = shooter1.getEncPosition();
+		shooter1.changeControlMode(TalonControlMode.Speed);
+
+	}
+
 	@Override
 	public void testPeriodic() {
+		getInputs();
+		// System.out.println("Encoder ticks: " + (shooter1.getEncPosition() -
+		// startEncoderTicks));
 
+		if (buttonDPad1 != buttonDPadLast1 && buttonDPad1 != -1) {
+			if (buttonDPad1 == 0 && shooterSpeed < 0.6) {
+				P += 0.01;
+			} else if (buttonDPad1 == 180 && shooterSpeed > 0) {
+				P -= 0.01;
+				if (P < 0) {
+					P = 0;
+				}
+				
+			}
+			shooter1.setPID(P, I, D);
+			System.out.println("P is now: " + shooter1.getP());
+		}
+
+		if (buttonA1) {
+			shooter1.changeControlMode(TalonControlMode.Speed);
+			shooter1.set(1500);
+			System.out.println("Shooter speed is: " + shooter1.getSpeed());
+		} else if (buttonY1) {
+			shooter1.changeControlMode(TalonControlMode.PercentVbus);
+			shooter1.set(0.35);
+		} else {
+			shooter1.set(0);
+
+		}
+		if (buttonB1) {
+			System.out.println(shooter1.getSpeed());
+		}
+		getLastInputs();
 	}
 
 	private void getLastInputs() {
@@ -248,6 +312,7 @@ public class Robot extends IterativeRobot {
 		buttonStartLast1 = buttonStart1;
 		buttonLeftStickClickLast1 = buttonLeftStickClick1;
 		buttonRightStickClickLast1 = buttonRightStickClick1;
+		buttonDPadLast1 = buttonDPad1;
 		buttonALast2 = buttonA2;
 		buttonBLast2 = buttonB2;
 		buttonXLast2 = buttonX2;
@@ -278,6 +343,7 @@ public class Robot extends IterativeRobot {
 		buttonStart1 = joystick1.getRawButton(8);
 		buttonLeftStickClick1 = joystick1.getRawButton(9);
 		buttonRightStickClick1 = joystick1.getRawButton(10);
+		buttonDPad1 = joystick1.getPOV();
 		leftX2 = joystick2.getRawAxis(0);
 		leftY2 = joystick2.getRawAxis(2);
 		rightX2 = joystick2.getRawAxis(4);
