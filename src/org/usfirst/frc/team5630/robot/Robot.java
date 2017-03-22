@@ -75,7 +75,7 @@ public class Robot extends IterativeRobot {
 		joystick1 = new Joystick(0);
 		joystick2 = new Joystick(1);
 		// intakeMotor.setInverted(true);
-		intakeMotor.setInverted(true);
+		intakeMotor.setInverted(false);
 		indexMotor.setInverted(true);
 		shooter1.setInverted(true);
 		shooter2.setInverted(true);
@@ -89,11 +89,17 @@ public class Robot extends IterativeRobot {
 		rightSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX1.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX2.configPeakOutputVoltage(12.0f, -12.0f);
-		leftSRX3.configPeakOutputVoltage(12.0f, -12.0f);
-		leftSRX1.configPeakOutputVoltage(12.0f, -12.0f);
-		leftSRX2.configPeakOutputVoltage(12.0f, -12.0f);
-		shooter1.configPeakOutputVoltage(12.0f, -12.0f);
-		shooter2.configPeakOutputVoltage(12.0f, -12.0f);
+		leftSRX3.configPeakOutputVoltage(11.5f, -11.5f);
+		leftSRX1.configPeakOutputVoltage(11.5f, -11.5f);
+		leftSRX2.configPeakOutputVoltage(11.5f, -11.5f);
+		rightSRX1.setVoltageRampRate(12);
+		rightSRX2.setVoltageRampRate(12);
+		rightSRX3.setVoltageRampRate(12);
+		leftSRX1.setVoltageRampRate(12);
+		leftSRX2.setVoltageRampRate(12);
+		leftSRX3.setVoltageRampRate(12);
+		shooter1.configPeakOutputVoltage(12.0f, 0.0f);
+		shooter2.configPeakOutputVoltage(12.0f, 0.0f);
 		numberOfPWMisZeroinARow = 0;
 		robotDrive = new RobotDrive(leftSRX1, rightSRX1);
 		leftSRX3.changeControlMode(TalonControlMode.Follower);
@@ -156,20 +162,9 @@ public class Robot extends IterativeRobot {
 		// rightSRX.changeControlMode(TalonControlMode.PercentVbus); // Changes
 		// to
 		// % Voltage
-		leftSRX3.changeControlMode(TalonControlMode.PercentVbus);
 		shooter1.changeControlMode(TalonControlMode.PercentVbus);
 		shooterToggle = false;
 		intakeToggle = false;
-		// robotDrive = new RobotDrive(leftSRX, leftMotor, rightSRX,
-		// rightMotor);// front
-		// left,
-		// rear
-		// left,
-		// front
-		// right,
-		// rear
-		// right
-		// shooter2.changeControlMode(TalonControlMode.PercentVbus);
 		shooterSpeed = 0.5;
 	}
 
@@ -188,7 +183,7 @@ public class Robot extends IterativeRobot {
 			intakeToggle = !intakeToggle;
 		}
 
-		armMotor.set((rightTrigger1 - leftTrigger1) / 2);
+		armMotor.set((rightTrigger1 - leftTrigger1) );
 
 		/*
 		 * if(buttonRB = true){//Checks if button A was clicked
@@ -211,7 +206,7 @@ public class Robot extends IterativeRobot {
 			}
 		}
 
-		robotDrive.arcadeDrive(-leftY1, rightX1);
+		robotDrive.arcadeDrive(-leftY1, -rightX1);
 		// System.out.println();
 		if (shooterToggle) {
 			shooter1.set(shooterSpeed);
@@ -259,45 +254,63 @@ public class Robot extends IterativeRobot {
 	double F = 0;
 
 	public void testInit() {
-		startEncoderTicks = shooter1.getEncPosition();
-		shooter1.changeControlMode(TalonControlMode.Speed);
+//		startEncoderTicks = shooter1.getEncPosition();
+//		shooter1.changeControlMode(TalonControlMode.Speed);
 
 	}
 
 	@Override
 	public void testPeriodic() {
 		getInputs();
-		// System.out.println("Encoder ticks: " + (shooter1.getEncPosition() -
-		// startEncoderTicks));
-
-		if (buttonDPad1 != buttonDPadLast1 && buttonDPad1 != -1) {
-			if (buttonDPad1 == 0 && shooterSpeed < 0.6) {
-				P += 0.01;
-			} else if (buttonDPad1 == 180 && shooterSpeed > 0) {
-				P -= 0.01;
-				if (P < 0) {
-					P = 0;
-				}
-				
-			}
-			shooter1.setPID(P, I, D);
-			System.out.println("P is now: " + shooter1.getP());
+		if(buttonA1){
+			leftSRX1.changeControlMode(TalonControlMode.PercentVbus);
+			leftSRX1.set(0.3);
+		}else{
+			leftSRX1.set(0);
 		}
-
-		if (buttonA1) {
-			shooter1.changeControlMode(TalonControlMode.Speed);
-			shooter1.set(1500);
-			System.out.println("Shooter speed is: " + shooter1.getSpeed());
-		} else if (buttonY1) {
-			shooter1.changeControlMode(TalonControlMode.PercentVbus);
-			shooter1.set(0.35);
-		} else {
-			shooter1.set(0);
-
+		if(buttonB1){
+			leftSRX2.changeControlMode(TalonControlMode.PercentVbus);
+			leftSRX2.set(0.3);
+		}else{
+			leftSRX2.set(0);
 		}
-		if (buttonB1) {
-			System.out.println(shooter1.getSpeed());
+		if(buttonY1){
+			leftSRX3.changeControlMode(TalonControlMode.PercentVbus);
+			leftSRX3.set(0.3);
+		}else{
+			leftSRX3.set(0);
 		}
+//		// System.out.println("Encoder ticks: " + (shooter1.getEncPosition() -
+//		// startEncoderTicks));
+//
+//		if (buttonDPad1 != buttonDPadLast1 && buttonDPad1 != -1) {
+//			if (buttonDPad1 == 0 && shooterSpeed < 0.6) {
+//				P += 0.01;
+//			} else if (buttonDPad1 == 180 && shooterSpeed > 0) {
+//				P -= 0.01;
+//				if (P < 0) {
+//					P = 0;
+//				}
+//				
+//			}
+//			shooter1.setPID(P, I, D);
+//			System.out.println("P is now: " + shooter1.getP());
+//		}
+//
+//		if (buttonA1) {
+//			shooter1.changeControlMode(TalonControlMode.Speed);
+//			shooter1.set(1500);
+//			System.out.println("Shooter speed is: " + shooter1.getSpeed());
+//		} else if (buttonY1) {
+//			shooter1.changeControlMode(TalonControlMode.PercentVbus);
+//			shooter1.set(0.35);
+//		} else {
+//			shooter1.set(0);
+//
+//		}
+//		if (buttonB1) {
+//			System.out.println(shooter1.getSpeed());
+//		}
 		getLastInputs();
 	}
 
@@ -363,3 +376,4 @@ public class Robot extends IterativeRobot {
 		buttonDPad2 = joystick2.getPOV();
 	}
 }
+
