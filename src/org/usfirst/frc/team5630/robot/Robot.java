@@ -65,13 +65,13 @@ public class Robot extends IterativeRobot {
 		leftSRX2 = new CANTalon(2);
 		leftSRX3 = new CANTalon(3);
 		shooter1 = new CANTalon(4);
-		shooter2 = new CANTalon(5);
-		rightSRX1 = new CANTalon(6);
-		rightSRX2 = new CANTalon(7);
-		rightSRX3 = new CANTalon(8);
-		intakeMotor = new CANTalon(9);
-		indexMotor = new CANTalon(10);
-		armMotor = new CANTalon(11);
+		shooter2 = new CANTalon(6);
+		rightSRX1 = new CANTalon(7);
+		rightSRX2 = new CANTalon(8);
+		rightSRX3 = new CANTalon(9);
+		intakeMotor = new CANTalon(10);
+		indexMotor = new CANTalon(11);
+		armMotor = new CANTalon(5);
 		joystick1 = new Joystick(0);
 		joystick2 = new Joystick(1);
 		// intakeMotor.setInverted(true);
@@ -183,7 +183,7 @@ public class Robot extends IterativeRobot {
 			intakeToggle = !intakeToggle;
 		}
 
-		armMotor.set((rightTrigger1 - leftTrigger1) );
+		armMotor.set((rightTrigger1 - leftTrigger1));
 
 		/*
 		 * if(buttonRB = true){//Checks if button A was clicked
@@ -219,13 +219,15 @@ public class Robot extends IterativeRobot {
 		// }else{
 		// intakeMotor.set(0);
 		// }
-		if (buttonRB1) {
-			indexMotor.set(0.5);
-		} else {
-			indexMotor.set(0);
-		}
+		// if (buttonRB1) {
+		// indexMotor.set(0.5);
+		// } else {
+		// indexMotor.set(0);
+		// }
 		if (buttonLB1) {
 			intakeMotor.set(1);
+		} else if (buttonRB1) {
+			intakeMotor.set(-1);
 		} else {
 			intakeMotor.set(0);
 		}
@@ -254,63 +256,64 @@ public class Robot extends IterativeRobot {
 	double F = 0;
 
 	public void testInit() {
-//		startEncoderTicks = shooter1.getEncPosition();
-//		shooter1.changeControlMode(TalonControlMode.Speed);
+		// startEncoderTicks = shooter1.getEncPosition();
+		// shooter1.changeControlMode(TalonControlMode.Speed);
 
 	}
 
 	@Override
 	public void testPeriodic() {
 		getInputs();
-		if(buttonA1){
+		if (buttonA1) {
 			leftSRX1.changeControlMode(TalonControlMode.PercentVbus);
 			leftSRX1.set(0.3);
-		}else{
+		} else {
 			leftSRX1.set(0);
 		}
-		if(buttonB1){
+		if (buttonB1) {
 			leftSRX2.changeControlMode(TalonControlMode.PercentVbus);
 			leftSRX2.set(0.3);
-		}else{
+		} else {
 			leftSRX2.set(0);
 		}
-		if(buttonY1){
+		if (buttonY1) {
 			leftSRX3.changeControlMode(TalonControlMode.PercentVbus);
 			leftSRX3.set(0.3);
-		}else{
+		} else {
 			leftSRX3.set(0);
 		}
-//		// System.out.println("Encoder ticks: " + (shooter1.getEncPosition() -
-//		// startEncoderTicks));
-//
-//		if (buttonDPad1 != buttonDPadLast1 && buttonDPad1 != -1) {
-//			if (buttonDPad1 == 0 && shooterSpeed < 0.6) {
-//				P += 0.01;
-//			} else if (buttonDPad1 == 180 && shooterSpeed > 0) {
-//				P -= 0.01;
-//				if (P < 0) {
-//					P = 0;
-//				}
-//				
-//			}
-//			shooter1.setPID(P, I, D);
-//			System.out.println("P is now: " + shooter1.getP());
-//		}
-//
-//		if (buttonA1) {
-//			shooter1.changeControlMode(TalonControlMode.Speed);
-//			shooter1.set(1500);
-//			System.out.println("Shooter speed is: " + shooter1.getSpeed());
-//		} else if (buttonY1) {
-//			shooter1.changeControlMode(TalonControlMode.PercentVbus);
-//			shooter1.set(0.35);
-//		} else {
-//			shooter1.set(0);
-//
-//		}
-//		if (buttonB1) {
-//			System.out.println(shooter1.getSpeed());
-//		}
+		// // System.out.println("Encoder ticks: " + (shooter1.getEncPosition()
+		// -
+		// // startEncoderTicks));
+		//
+		// if (buttonDPad1 != buttonDPadLast1 && buttonDPad1 != -1) {
+		// if (buttonDPad1 == 0 && shooterSpeed < 0.6) {
+		// P += 0.01;
+		// } else if (buttonDPad1 == 180 && shooterSpeed > 0) {
+		// P -= 0.01;
+		// if (P < 0) {
+		// P = 0;
+		// }
+		//
+		// }
+		// shooter1.setPID(P, I, D);
+		// System.out.println("P is now: " + shooter1.getP());
+		// }
+		//
+		// if (buttonA1) {
+		// shooter1.changeControlMode(TalonControlMode.Speed);
+		// shooter1.set(1500);
+		// System.out.println("Shooter speed is: " + shooter1.getSpeed());
+		// } else if (buttonY1) {
+		// shooter1.changeControlMode(TalonControlMode.PercentVbus);
+		// shooter1.set(0.35);
+		// } else {
+		// shooter1.set(0);
+		//
+		// }
+		// if (buttonB1) {
+		// System.out.println(shooter1.getSpeed());
+		// }
 		getLastInputs();
 	}
 
@@ -376,4 +379,3 @@ public class Robot extends IterativeRobot {
 		buttonDPad2 = joystick2.getPOV();
 	}
 }
-
