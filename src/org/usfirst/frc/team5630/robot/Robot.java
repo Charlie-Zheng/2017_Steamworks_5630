@@ -97,7 +97,7 @@ public class Robot extends IterativeRobot {
 		leftSRX2.enableBrakeMode(true);
 		leftSRX3.enableBrakeMode(true);
 		// System.out.println("F is: " + leftSRX1.getF());
-		leftSRX1.setPID(1, 0.0023, 0);
+		leftSRX1.setPID(1, 0.0011, 0);
 		leftSRX1.reverseSensor(true);
 		leftSRX1.setInverted(true);
 		leftSRX1.reverseOutput(false);
@@ -105,7 +105,7 @@ public class Robot extends IterativeRobot {
 		leftSRX3.reverseOutput(false);
 		rightSRX1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		rightSRX1.configEncoderCodesPerRev(180);
-		rightSRX1.setPID(1.2, 0.003, 0);
+		rightSRX1.setPID(1.2, 0.0015, 0);
 		rightSRX1.reverseSensor(false);
 		rightSRX1.setInverted(false);
 		rightSRX1.reverseOutput(true);
@@ -250,6 +250,25 @@ public class Robot extends IterativeRobot {
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
+			if(autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints + 75){
+				leftSRX1.clearMotionProfileTrajectories();
+				rightSRX1.clearMotionProfileTrajectories();
+				rightSRX1.setPosition(0);
+				leftSRX1.setPosition(0);
+				leftSRX1.clearIAccum();
+				rightSRX1.clearIAccum();
+				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+				for (int x = 0; x < RightGearProfile4.kNumPoints; x++) {
+					point.position = RightGearProfile4.Points[x][0];
+					point.velocity = RightGearProfile4.Points[x][1];
+					point.timeDurMs = (int) RightGearProfile4.Points[x][2];
+					point.velocityOnly = false;
+					rightSRX1.pushMotionProfileTrajectory(point);
+					point.position = RightGearProfile4.Points[x][0];
+					point.velocity = RightGearProfile4.Points[x][1];
+					leftSRX1.pushMotionProfileTrajectory(point);
+				}
+			}
 //			if(autoCounter == RightGearProfile.kNumPoints+RightGearProfile2.kNumPoints){
 //				leftSRX1.clearMotionProfileTrajectories();
 //				rightSRX1.clearMotionProfileTrajectories();
@@ -279,7 +298,7 @@ public class Robot extends IterativeRobot {
 					point.position = MiddleGearProfile.Points[x][0];
 					point.velocity = MiddleGearProfile.Points[x][1];
 					point.timeDurMs = (int) MiddleGearProfile.Points[x][2];
-					point.velocityOnly = true;
+					point.velocityOnly = false;
 					rightSRX1.pushMotionProfileTrajectory(point);
 					point.position = MiddleGearProfile.Points[x][0];
 					point.velocity = MiddleGearProfile.Points[x][1];
@@ -327,7 +346,7 @@ public class Robot extends IterativeRobot {
 				// rightSRX1.setPID(1, 0.000, 0);
 				// leftSRX1.setPID(1, 0.000, 0);
 			}
-			if (autoCounter == MotionProfile.kNumPoints + 75) {
+			if (autoCounter == MotionProfile.kNumPoints + 25) {
 				leftSRX1.clearMotionProfileTrajectories();
 				rightSRX1.clearMotionProfileTrajectories();
 				rightSRX1.setPosition(0);
@@ -346,7 +365,7 @@ public class Robot extends IterativeRobot {
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
-			if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + 150) {
+			if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + 50) {
 				leftSRX1.clearMotionProfileTrajectories();
 				rightSRX1.clearMotionProfileTrajectories();
 				rightSRX1.setPosition(0);
@@ -365,7 +384,7 @@ public class Robot extends IterativeRobot {
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
-			if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints + 150) {
+			if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints + 40) {
 				leftSRX1.clearMotionProfileTrajectories();
 				rightSRX1.clearMotionProfileTrajectories();
 				rightSRX1.setPosition(0);
