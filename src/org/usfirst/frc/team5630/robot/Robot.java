@@ -190,6 +190,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Speed Left", leftSRX1.getSpeed());
 		SmartDashboard.putNumber("Speed Right", rightSRX1.getSpeed());
 		SmartDashboard.putNumber("Pos Right", rightSRX1.getPosition());
+		arm.setPosition(0);
 		rightSRX1.set(1);
 		leftSRX1.set(1);
 		rightSRX1.setF(4.5/1.5);
@@ -335,13 +336,13 @@ public class Robot extends IterativeRobot {
 				rightSRX1.clearIAccum();
 				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
 				for (int x = 0; x < MotionProfile2.kNumPoints; x++) {
-					point.position = -MotionProfile2.Points[x][0];
-					point.velocity = -MotionProfile2.Points[x][1];
+					point.position = MotionProfile2.Points[x][0];
+					point.velocity = MotionProfile2.Points[x][1];
 					point.timeDurMs = (int) MotionProfile2.Points[x][2];
 					point.velocityOnly = false;
 					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = MotionProfile2.Points[x][0];
-					point.velocity = MotionProfile2.Points[x][1];
+					point.position = -MotionProfile2.Points[x][0];
+					point.velocity = -MotionProfile2.Points[x][1];
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
@@ -373,13 +374,13 @@ public class Robot extends IterativeRobot {
 				rightSRX1.clearIAccum();
 				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
 				for (int x = 0; x < MotionProfile4.kNumPoints; x++) {
-					point.position = 0.2 * MotionProfile4.Points[x][0];
-					point.velocity = 0.2 * MotionProfile4.Points[x][1];
+					point.position = -1.9 * MotionProfile4.Points[x][0];
+					point.velocity = -1.9 * MotionProfile4.Points[x][1];
 					point.timeDurMs = (int) MotionProfile4.Points[x][2];
 					point.velocityOnly = false;
 					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = -1.9 * MotionProfile4.Points[x][0];
-					point.velocity = -1.9 * MotionProfile4.Points[x][1];
+					point.position = 0.2 * MotionProfile4.Points[x][0];
+					point.velocity = 0.2 * MotionProfile4.Points[x][1];
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
