@@ -1,20 +1,11 @@
 package org.usfirst.frc.team5630.robot;
 
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.RobotDrive.MotorType;
-import edu.wpi.first.wpilibj.buttons.Trigger;
-import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.Talon;
-
 import com.ctre.CANTalon;
 import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
-import com.ctre.CanTalonJNI.param_t;
-
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -40,10 +31,9 @@ public class Robot extends IterativeRobot {
 	String autoSelected;
 	final int MaxRPM = 450;
 	SendableChooser<String> chooser = new SendableChooser<>();
-	CANTalon rightSRX3, shooter1, shooter2;
-	CANTalon leftSRX3;
+	CANTalon shooter1, shooter2;
 	CANTalon leftSRX1, rightSRX1, leftSRX2, rightSRX2;
-	CANTalon intake, indexMotor, arm;
+	CANTalon intake, index, arm;
 	Joystick joystick1, joystick2;
 	double rightX1, rightY1, leftTrigger1, rightTrigger1, leftX1, leftY1;
 	boolean buttonA1, buttonB1, buttonX1, buttonY1, buttonRB1, buttonLB1, buttonLeftStickClick1, buttonRightStickClick1,
@@ -61,6 +51,7 @@ public class Robot extends IterativeRobot {
 	boolean shooterToggle, intakeToggle;
 	int numberOfPWMisZeroinARow;
 	RobotDrive robotDrive;
+	// Thread visionThread;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -68,24 +59,36 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		chooser.addDefault("Default Auto", defaultAuto);
-		chooser.addObject(rightGear, rightGear);
+		// visionThread = new Thread(() -> {
+		// CameraServer.getInstance().putVideo("Camera", 640, 640);
+		// });
+		//chooser.addDefault("Default Auto", defaultAuto);
+		chooser.addDefault(rightGear, rightGear);
 		chooser.addObject(sideShootAuto, sideShootAuto);
 		chooser.addObject(middleGear, middleGear);
 		SmartDashboard.putData("Auto chooser", chooser);
 		leftSRX1 = new CANTalon(1);
+		leftSRX1.enableBrakeMode(true);
 		leftSRX2 = new CANTalon(2);
-		leftSRX3 = new CANTalon(3);
-		shooter1 = new CANTalon(4);
-		arm = new CANTalon(5);
+		leftSRX2.enableBrakeMode(true);
+		// leftSRX3 = new CANTalon(3);
+		shooter1 = new CANTalon(5);
+		shooter1.enableBrakeMode(false);
+		arm = new CANTalon(4);
+		arm.enableBrakeMode(true);
 		shooter2 = new CANTalon(6);
+		shooter2.enableBrakeMode(false);
 		rightSRX1 = new CANTalon(8);
+		rightSRX1.enableBrakeMode(true);
 		rightSRX2 = new CANTalon(7);
-		rightSRX3 = new CANTalon(9);
-		intake = new CANTalon(10);
-		indexMotor = new CANTalon(11);
+		rightSRX2.enableBrakeMode(true);
+		// rightSRX3 = new CANTalon(9);
+		intake = new CANTalon(9);
+		intake.enableBrakeMode(false);
+		index = new CANTalon(3);
+		index.enableBrakeMode(false);
 		joystick1 = new Joystick(0);
-		joystick2 = new Joystick(1);
+		// joystick2 = new Joystick(1);
 		// intakeMotor.setInverted(true);
 		arm.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		arm.configEncoderCodesPerRev(4096);
@@ -95,22 +98,22 @@ public class Robot extends IterativeRobot {
 		leftSRX1.configEncoderCodesPerRev(180);
 		leftSRX1.enableBrakeMode(true);
 		leftSRX2.enableBrakeMode(true);
-		leftSRX3.enableBrakeMode(true);
+		// leftSRX3.enableBrakeMode(true);
 		// System.out.println("F is: " + leftSRX1.getF());
 		leftSRX1.setPID(1, 0.0011, 0);
 		leftSRX1.reverseSensor(true);
 		leftSRX1.setInverted(true);
 		leftSRX1.reverseOutput(false);
 		leftSRX2.reverseOutput(false);
-		leftSRX3.reverseOutput(false);
+		// leftSRX3.reverseOutput(false);
 		rightSRX1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		rightSRX1.configEncoderCodesPerRev(180);
-		rightSRX1.setPID(1.2, 0.0015, 0);
+		rightSRX1.setPID(1, 0.0011, 0);
 		rightSRX1.reverseSensor(false);
 		rightSRX1.setInverted(false);
 		rightSRX1.reverseOutput(true);
 		rightSRX2.reverseOutput(false);
-		rightSRX3.reverseOutput(false);
+		// rightSRX3.reverseOutput(false);
 		arm.setInverted(true);
 		arm.reverseSensor(false);
 		arm.configEncoderCodesPerRev(4096);
@@ -119,39 +122,45 @@ public class Robot extends IterativeRobot {
 		arm.setPID(0.1, 0.0001, 0);
 		arm.setF(100);
 		intake.setInverted(false);
-		indexMotor.setInverted(false);
+		index.setInverted(true);
 
-		shooter1.setInverted(false);
-		shooter2.setInverted(false);
+		shooter1.setInverted(true);
+		shooter2.setInverted(true);
+		shooter1.reverseOutput(false);
 		shooter1.reverseSensor(false);
 		arm.configPeakOutputVoltage(4, -4);
-		rightSRX3.configPeakOutputVoltage(12.0f, -12.0f);
+		// rightSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX1.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX2.configPeakOutputVoltage(12.0f, -12.0f);
-		leftSRX3.configPeakOutputVoltage(12.0f, -12.0f);
+		// leftSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		leftSRX1.configPeakOutputVoltage(12.0f, -12.0f);
 		leftSRX2.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX1.setVoltageRampRate(36);
 		rightSRX2.setVoltageRampRate(36);
-		rightSRX3.setVoltageRampRate(36);
+		// rightSRX3.setVoltageRampRate(36);
 		leftSRX1.setVoltageRampRate(36);
 		leftSRX2.setVoltageRampRate(36);
-		leftSRX3.setVoltageRampRate(36);
-		shooter1.configPeakOutputVoltage(8.0f, 0.0f);
-		shooter2.configPeakOutputVoltage(8.0f, 0.0f);
+		// leftSRX3.setVoltageRampRate(36);
+		shooter1.configPeakOutputVoltage(0, -8.0);
+		shooter2.configPeakOutputVoltage(0, -8.0);
 		numberOfPWMisZeroinARow = 0;
-		leftSRX3.changeControlMode(TalonControlMode.Follower);
+		// leftSRX3.changeControlMode(TalonControlMode.Follower);
 		leftSRX2.changeControlMode(TalonControlMode.Follower);
-		leftSRX3.set(leftSRX1.getDeviceID());
+		// leftSRX3.set(leftSRX1.getDeviceID());
 		leftSRX2.set(leftSRX1.getDeviceID());
-		rightSRX3.changeControlMode(TalonControlMode.Follower);
+		// rightSRX3.changeControlMode(TalonControlMode.Follower);
 		rightSRX2.changeControlMode(TalonControlMode.Follower);
-		rightSRX3.set(rightSRX1.getDeviceID());
+		// rightSRX3.set(rightSRX1.getDeviceID());
 		rightSRX2.set(rightSRX1.getDeviceID());
 		shooter1.changeControlMode(TalonControlMode.Speed);
+
 		shooter2.changeControlMode(TalonControlMode.Follower);
 		shooter2.set(shooter1.getDeviceID());
 		arm.setPosition(0);
+		arm.setForwardSoftLimit(-0.125);
+		arm.enableForwardSoftLimit(true);
+		arm.setReverseSoftLimit(0);
+		arm.enableReverseSoftLimit(true);
 	}
 
 	/**
@@ -175,6 +184,8 @@ public class Robot extends IterativeRobot {
 		System.out.println("Auto selected: " + autoSelected);
 		rightSRX1.changeControlMode(TalonControlMode.MotionProfile);
 		leftSRX1.changeControlMode(TalonControlMode.MotionProfile);
+		arm.changeControlMode(TalonControlMode.Position);
+		arm.set(0);
 	}
 
 	/**
@@ -190,13 +201,16 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Speed Left", leftSRX1.getSpeed());
 		SmartDashboard.putNumber("Speed Right", rightSRX1.getSpeed());
 		SmartDashboard.putNumber("Pos Right", rightSRX1.getPosition());
-		arm.setPosition(0);
+		// arm.setPosition(0);
 		rightSRX1.set(1);
 		leftSRX1.set(1);
-		rightSRX1.setF(4.5/1.5);
-		leftSRX1.setF(2.75/1.5);
+		rightSRX1.setF(3 / 1.5);
+		leftSRX1.setF(3 / 1.5);
 		leftSRX1.processMotionProfileBuffer();
 		rightSRX1.processMotionProfileBuffer();
+		if (arm.getControlMode().equals(TalonControlMode.MotionProfile)) {
+			arm.processMotionProfileBuffer();
+		}
 		switch (autoSelected) {
 		case rightGear:
 
@@ -219,38 +233,43 @@ public class Robot extends IterativeRobot {
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
-			if(autoCounter == RightGearProfile.kNumPoints){
+			if (autoCounter == RightGearProfile.kNumPoints) {
 				leftSRX1.clearMotionProfileTrajectories();
 				rightSRX1.clearMotionProfileTrajectories();
 				leftSRX1.clearIAccum();
 				rightSRX1.clearIAccum();
 				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
 				for (int x = 0; x < RightGearProfile2.kNumPoints; x++) {
-					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints-1][0]+RightGearProfile2.Points[x][0];
+					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+							+ RightGearProfile2.Points[x][0];
 					point.velocity = RightGearProfile2.Points[x][1];
 					point.timeDurMs = (int) RightGearProfile2.Points[x][2];
 					point.velocityOnly = false;
 					rightSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
-			if(autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 75)	{
+			if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25) {
 				leftSRX1.clearMotionProfileTrajectories();
 				rightSRX1.clearMotionProfileTrajectories();
 				leftSRX1.clearIAccum();
 				rightSRX1.clearIAccum();
 				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
 				for (int x = 0; x < RightGearProfile3.kNumPoints; x++) {
-					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints-1][0]+RightGearProfile2.Points[RightGearProfile2.kNumPoints-1][0]+RightGearProfile3.Points[x][0];
+					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+							+ RightGearProfile2.Points[RightGearProfile2.kNumPoints - 1][0]
+							+ RightGearProfile3.Points[x][0];
 					point.velocity = RightGearProfile3.Points[x][1];
 					point.timeDurMs = (int) RightGearProfile3.Points[x][2];
 					point.velocityOnly = false;
 					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints-1][0]+RightGearProfile3.Points[x][0];
+					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+							+ RightGearProfile3.Points[x][0];
 					point.velocity = RightGearProfile3.Points[x][1];
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
-			if(autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints + 75){
+			if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
+					+ 50) {
 				leftSRX1.clearMotionProfileTrajectories();
 				rightSRX1.clearMotionProfileTrajectories();
 				rightSRX1.setPosition(0);
@@ -269,20 +288,26 @@ public class Robot extends IterativeRobot {
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
-//			if(autoCounter == RightGearProfile.kNumPoints+RightGearProfile2.kNumPoints){
-//				leftSRX1.clearMotionProfileTrajectories();
-//				rightSRX1.clearMotionProfileTrajectories();
-//				leftSRX1.clearIAccum();
-//				rightSRX1.clearIAccum();
-//				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-//				for (int x = 0; x < RightGearProfile2.kNumPoints; x++) {
-//					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints-1][0]+RightGearProfile2.Points[x][0];
-//					point.velocity = RightGearProfile2.Points[x][1];
-//					point.timeDurMs = (int) RightGearProfile2.Points[x][2];
-//					point.velocityOnly = false;
-//					rightSRX1.pushMotionProfileTrajectory(point);
-//				}
-//			}
+			if (autoCounter < RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
+					+ 100) {
+				intake.set(-0.4);
+			}
+			// if(autoCounter ==
+			// RightGearProfile.kNumPoints+RightGearProfile2.kNumPoints){
+			// leftSRX1.clearMotionProfileTrajectories();
+			// rightSRX1.clearMotionProfileTrajectories();
+			// leftSRX1.clearIAccum();
+			// rightSRX1.clearIAccum();
+			// CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			// for (int x = 0; x < RightGearProfile2.kNumPoints; x++) {
+			// point.position =
+			// RightGearProfile.Points[RightGearProfile.kNumPoints-1][0]+RightGearProfile2.Points[x][0];
+			// point.velocity = RightGearProfile2.Points[x][1];
+			// point.timeDurMs = (int) RightGearProfile2.Points[x][2];
+			// point.velocityOnly = false;
+			// rightSRX1.pushMotionProfileTrajectory(point);
+			// }
+			// }
 			break;
 		case middleGear:
 			// Put custom auto code here
@@ -316,14 +341,29 @@ public class Robot extends IterativeRobot {
 					point.velocityOnly = false;
 					arm.pushMotionProfileTrajectory(point);
 				}
+				leftSRX1.clearMotionProfileTrajectories();
+				rightSRX1.clearMotionProfileTrajectories();
+				rightSRX1.setPosition(0);
+				leftSRX1.setPosition(0);
+				leftSRX1.clearIAccum();
+				rightSRX1.clearIAccum();
+				for (int x = 0; x < RightGearProfile4.kNumPoints; x++) {
+					point.position = RightGearProfile4.Points[x][0];
+					point.velocity = RightGearProfile4.Points[x][1];
+					point.timeDurMs = (int) RightGearProfile4.Points[x][2];
+					point.velocityOnly = false;
+					rightSRX1.pushMotionProfileTrajectory(point);
+					point.position = RightGearProfile4.Points[x][0];
+					point.velocity = RightGearProfile4.Points[x][1];
+					leftSRX1.pushMotionProfileTrajectory(point);
+				}
 			}
-			if (autoCounter > MiddleGearProfile.kNumPoints + 15) {
-				intake.set(-0.5);
-			}
+//			if (autoCounter > MiddleGearProfile.kNumPoints + 15) {
+//				intake.set(-0.4);
+//			}
 
 			break;
 		case sideShootAuto:
-		default:
 			// Put default auto code here
 			if (autoCounter == 1) {
 				leftSRX1.clearMotionProfileTrajectories();
@@ -332,6 +372,7 @@ public class Robot extends IterativeRobot {
 				leftSRX1.setPosition(0);
 				leftSRX1.clearIAccum();
 				rightSRX1.clearIAccum();
+				arm.set(-0.125);
 				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
 				for (int x = 0; x < MotionProfile.kNumPoints; x++) {
 					point.position = MotionProfile.Points[x][0];
@@ -403,6 +444,14 @@ public class Robot extends IterativeRobot {
 					leftSRX1.pushMotionProfileTrajectory(point);
 				}
 			}
+			if(autoCounter >= MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints +MotionProfile4.kNumPoints+ 40){
+				shooter1.changeControlMode(TalonControlMode.Speed);
+				shooter1.set(1200);
+			}
+			if(shooter1.getSpeed() >= 1200){
+				index.set(1);
+				arm.set(0);
+			}
 			// rightSRX1.set(1);
 			// rightSRX1.processMotionProfileBuffer();
 			SmartDashboard.putNumber("Position", rightSRX1.getPosition());
@@ -418,18 +467,20 @@ public class Robot extends IterativeRobot {
 		// rightSRX.changeControlMode(TalonControlMode.PercentVbus); // Changes
 		// to
 		// % Voltage
+		// visionThread.setDaemon(true);
+		// visionThread.run();
 		shooter1.changeControlMode(TalonControlMode.PercentVbus);
 		arm.changeControlMode(TalonControlMode.PercentVbus);
 		shooterToggle = false;
 		intakeToggle = false;
-		shooterSpeed = 1200;
-		leftSRX3.changeControlMode(TalonControlMode.Follower);
+		shooterSpeed = 600;
+		// leftSRX3.changeControlMode(TalonControlMode.Follower);
 		leftSRX2.changeControlMode(TalonControlMode.Follower);
-		leftSRX3.set(leftSRX1.getDeviceID());
+		// leftSRX3.set(leftSRX1.getDeviceID());
 		leftSRX2.set(leftSRX1.getDeviceID());
-		rightSRX3.changeControlMode(TalonControlMode.Follower);
+		// rightSRX3.changeControlMode(TalonControlMode.Follower);
 		rightSRX2.changeControlMode(TalonControlMode.Follower);
-		rightSRX3.set(rightSRX1.getDeviceID());
+		// rightSRX3.set(rightSRX1.getDeviceID());
 		rightSRX2.set(rightSRX1.getDeviceID());
 		rightSRX1.changeControlMode(TalonControlMode.Speed);
 		leftSRX1.changeControlMode(TalonControlMode.Speed);
@@ -438,13 +489,14 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		// double start = System.currentTimeMillis();
 		getInputs(); // Gets joystick inputs
-		shooter1.setF(0.06);
-		shooter1.setPID(0.1, 0.00003, 0.00000);
+		shooter1.setF(0.01);
+		shooter1.setPID(0.1, 0.003, 0.00000);
 		SmartDashboard.putNumber("ArmPosition", arm.getPosition());
-		SmartDashboard.putNumber("Speed", rightSRX1.getSpeed());
-		SmartDashboard.putNumber("EncSpeed", rightSRX1.getEncVelocity());
-		SmartDashboard.putNumber("RightX1", rightX1);
-		SmartDashboard.putNumber("right output", rightSRX1.getOutputVoltage());
+		// SmartDashboard.putNumber("Speed", rightSRX1.getSpeed());
+		// SmartDashboard.putNumber("EncSpeed", rightSRX1.getEncVelocity());
+		// SmartDashboard.putNumber("RightX1", rightX1);
+		// SmartDashboard.putNumber("right output",
+		// rightSRX1.getOutputVoltage());
 		if (buttonB1 != buttonBLast1 && buttonB1) {// Checks if button A was
 			// clicked shooterToggle =
 			// !shooterToggle;
@@ -463,6 +515,7 @@ public class Robot extends IterativeRobot {
 		}
 
 		//
+		arm.changeControlMode(TalonControlMode.Position);
 		if (Math.abs(rightTrigger1 - leftTrigger1) > 0.2) {
 			arm.changeControlMode(TalonControlMode.PercentVbus);
 			arm.set((rightTrigger1 - leftTrigger1) / 3);
@@ -516,15 +569,20 @@ public class Robot extends IterativeRobot {
 		rightSRX1.set(rightSpeed * MaxRPM);
 		// System.out.println();
 		if (buttonA1) {
-			indexMotor.set(1);
+			index.set(1);
+		} else if (buttonX1) {
+			index.set(-1);
 		} else {
-			indexMotor.set(0);
-		}
+			index.set(0);
+		}			SmartDashboard.putNumber("Shooter RPM", shooter1.getSpeed());
 		if (shooterToggle) {
+			// shooter1.changeControlMode(TalonControlMode.Speed);
+			// shooter1.set(shooterSpeed);
 			shooter1.changeControlMode(TalonControlMode.Speed);
+			System.out.println("Shooting");
 			shooter1.set(shooterSpeed);
-			SmartDashboard.putNumber("Shooter RPM", shooter1.getSpeed());
-			SmartDashboard.putNumber("Shooter VOltage", shooter1.getOutputVoltage());
+
+			SmartDashboard.putNumber("Shooter Voltage", shooter1.getOutputVoltage());
 		} else {
 			shooter1.set(0);
 			shooter1.clearIAccum();
@@ -595,18 +653,22 @@ public class Robot extends IterativeRobot {
 	/**
 	 * This function is called periodically during test mode
 	 */
+	// @Override
+	// public void disabledInit() {
+	// visionThread.interrupt();
+	// }
 
 	public void testInit() {
 		startEncoderTicks = leftSRX1.getEncPosition();
 		leftSRX1.setPosition(0);
 		// shooter1.changeControlMode(TalonControlMode.Speed);
-		leftSRX3.changeControlMode(TalonControlMode.Follower);
+		// leftSRX3.changeControlMode(TalonControlMode.Follower);
 		leftSRX2.changeControlMode(TalonControlMode.Follower);
-		leftSRX3.set(leftSRX1.getDeviceID());
+		// leftSRX3.set(leftSRX1.getDeviceID());
 		leftSRX2.set(leftSRX1.getDeviceID());
-		rightSRX3.changeControlMode(TalonControlMode.Follower);
+		// rightSRX3.changeControlMode(TalonControlMode.Follower);
 		rightSRX2.changeControlMode(TalonControlMode.Follower);
-		rightSRX3.set(rightSRX1.getDeviceID());
+		// rightSRX3.set(rightSRX1.getDeviceID());
 		rightSRX2.set(rightSRX1.getDeviceID());
 		rightSRX1.changeControlMode(TalonControlMode.Speed);
 		leftSRX1.changeControlMode(TalonControlMode.Speed);
@@ -618,10 +680,10 @@ public class Robot extends IterativeRobot {
 		getInputs();
 		SmartDashboard.putNumber("Speed", leftSRX1.getSpeed());
 		// System.out.println("Speed: " + rightSRX1.getSpeed());
-		leftSRX3.set(leftSRX1.getDeviceID());
+		// leftSRX3.set(leftSRX1.getDeviceID());
 		robotDrive.arcadeDrive(-leftY1, -rightX1);
 		// System.out.println("SRX#3 Output Voltage: " +
-		// leftSRX3.getOutputVoltage());
+		// // leftSRX3.getOutputVoltage());
 		// if (buttonA1) {
 		// leftSRX1.changeControlMode(TalonControlMode.PercentVbus);
 		// leftSRX1.set(0.3);
@@ -635,10 +697,10 @@ public class Robot extends IterativeRobot {
 		// leftSRX2.set(0);
 		// }
 		// if (buttonY1) {
-		// leftSRX3.changeControlMode(TalonControlMode.PercentVbus);
-		// leftSRX3.set(0.3);
+		// // leftSRX3.changeControlMode(TalonControlMode.PercentVbus);
+		// // leftSRX3.set(0.3);
 		// } else {
-		// leftSRX3.set(0);
+		// // leftSRX3.set(0);
 		// }
 
 		// // System.out.println("Encoder ticks: " + (shooter1.getEncPosition()
@@ -690,17 +752,17 @@ public class Robot extends IterativeRobot {
 		buttonLeftStickClickLast1 = buttonLeftStickClick1;
 		buttonRightStickClickLast1 = buttonRightStickClick1;
 		buttonDPadLast1 = buttonDPad1;
-		buttonALast2 = buttonA2;
-		buttonBLast2 = buttonB2;
-		buttonXLast2 = buttonX2;
-		buttonYLast2 = buttonY2;
-		buttonLBLast2 = buttonLB2;
-		buttonRBLast2 = buttonRB2;
-		buttonBackLast2 = buttonBack2;
-		buttonStartLast2 = buttonStart2;
-		buttonLeftStickClickLast2 = buttonLeftStickClick2;
-		buttonRightStickClickLast2 = buttonRightStickClick2;
-		buttonDPadLast2 = buttonDPad2;
+		// buttonALast2 = buttonA2;
+		// buttonBLast2 = buttonB2;
+		// buttonXLast2 = buttonX2;
+		// buttonYLast2 = buttonY2;
+		// buttonLBLast2 = buttonLB2;
+		// buttonRBLast2 = buttonRB2;
+		// buttonBackLast2 = buttonBack2;
+		// buttonStartLast2 = buttonStart2;
+		// buttonLeftStickClickLast2 = buttonLeftStickClick2;
+		// buttonRightStickClickLast2 = buttonRightStickClick2;
+		// buttonDPadLast2 = buttonDPad2;
 	}
 
 	private void getInputs() {
@@ -721,22 +783,22 @@ public class Robot extends IterativeRobot {
 		buttonLeftStickClick1 = joystick1.getRawButton(9);
 		buttonRightStickClick1 = joystick1.getRawButton(10);
 		buttonDPad1 = joystick1.getPOV();
-		leftX2 = joystick2.getRawAxis(0);
-		leftY2 = joystick2.getRawAxis(2);
-		rightX2 = joystick2.getRawAxis(4);
-		rightY2 = joystick2.getRawAxis(5);
-		leftTrigger2 = joystick2.getRawAxis(2);
-		rightTrigger2 = joystick2.getRawAxis(3);
-		buttonA2 = joystick2.getRawButton(1);
-		buttonB2 = joystick2.getRawButton(2);
-		buttonX2 = joystick2.getRawButton(3);
-		buttonY2 = joystick2.getRawButton(4);
-		buttonLB2 = joystick2.getRawButton(5);
-		buttonRB2 = joystick2.getRawButton(6);
-		buttonBack2 = joystick2.getRawButton(7);
-		buttonStart2 = joystick2.getRawButton(8);
-		buttonLeftStickClick2 = joystick2.getRawButton(9);
-		buttonRightStickClick2 = joystick2.getRawButton(10);
-		buttonDPad2 = joystick2.getPOV();
+		// leftX2 = joystick2.getRawAxis(0);
+		// leftY2 = joystick2.getRawAxis(2);
+		// rightX2 = joystick2.getRawAxis(4);
+		// rightY2 = joystick2.getRawAxis(5);
+		// leftTrigger2 = joystick2.getRawAxis(2);
+		// rightTrigger2 = joystick2.getRawAxis(3);
+		// buttonA2 = joystick2.getRawButton(1);
+		// buttonB2 = joystick2.getRawButton(2);
+		// buttonX2 = joystick2.getRawButton(3);
+		// buttonY2 = joystick2.getRawButton(4);
+		// buttonLB2 = joystick2.getRawButton(5);
+		// buttonRB2 = joystick2.getRawButton(6);
+		// buttonBack2 = joystick2.getRawButton(7);
+		// buttonStart2 = joystick2.getRawButton(8);
+		// buttonLeftStickClick2 = joystick2.getRawButton(9);
+		// buttonRightStickClick2 = joystick2.getRawButton(10);
+		// buttonDPad2 = joystick2.getPOV();
 	}
 }
