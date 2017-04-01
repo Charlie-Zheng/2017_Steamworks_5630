@@ -1,5 +1,6 @@
 package org.usfirst.frc.team5630.robot;
 
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -19,9 +20,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends IterativeRobot {
 	// Variable declarations
 	final String defaultAuto = "Default";
-	final String sideShootAuto = "Blue Shoot";
+	final String sideShoot = "Blue Shoot";
 	final String middleGear = "Middle Gear";
 	final String rightGear = "Right Gear";
+	final String leftGear = "Left Gear";
 	final double DeadZone = 0.215;
 	int startEncoderTicks;
 	double P = 3;
@@ -62,10 +64,11 @@ public class Robot extends IterativeRobot {
 		// visionThread = new Thread(() -> {
 		// CameraServer.getInstance().putVideo("Camera", 640, 640);
 		// });
-		//chooser.addDefault("Default Auto", defaultAuto);
+		// chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addDefault(rightGear, rightGear);
-		chooser.addObject(sideShootAuto, sideShootAuto);
+		chooser.addObject(sideShoot, sideShoot);
 		chooser.addObject(middleGear, middleGear);
+		chooser.addObject(leftGear, leftGear);
 		SmartDashboard.putData("Auto chooser", chooser);
 		leftSRX1 = new CANTalon(1);
 		leftSRX1.enableBrakeMode(true);
@@ -88,7 +91,7 @@ public class Robot extends IterativeRobot {
 		index = new CANTalon(3);
 		index.enableBrakeMode(false);
 		joystick1 = new Joystick(0);
-		// joystick2 = new Joystick(1);
+		joystick2 = new Joystick(1);
 		// intakeMotor.setInverted(true);
 		arm.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		arm.configEncoderCodesPerRev(4096);
@@ -117,17 +120,17 @@ public class Robot extends IterativeRobot {
 		arm.setInverted(true);
 		arm.reverseSensor(false);
 		arm.configEncoderCodesPerRev(4096);
-		arm.setForwardSoftLimit(0);
-		arm.setReverseSoftLimit(-0.127);
+		arm.setReverseSoftLimit(0);
+		arm.setForwardSoftLimit(0.125);
 		arm.setPID(0.1, 0.0001, 0);
 		arm.setF(100);
 		intake.setInverted(false);
 		index.setInverted(true);
 
-		shooter1.setInverted(true);
-		shooter2.setInverted(true);
-		shooter1.reverseOutput(false);
-		shooter1.reverseSensor(false);
+		shooter1.setInverted(false);
+		shooter2.setInverted(false);
+		shooter1.reverseOutput(true);
+		shooter1.reverseSensor(true);
 		arm.configPeakOutputVoltage(4, -4);
 		// rightSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX1.configPeakOutputVoltage(12.0f, -12.0f);
@@ -157,10 +160,10 @@ public class Robot extends IterativeRobot {
 		shooter2.changeControlMode(TalonControlMode.Follower);
 		shooter2.set(shooter1.getDeviceID());
 		arm.setPosition(0);
-		arm.setForwardSoftLimit(-0.125);
-		arm.enableForwardSoftLimit(true);
+		arm.setForwardSoftLimit(0.125);
+		arm.enableForwardSoftLimit(false);
 		arm.setReverseSoftLimit(0);
-		arm.enableReverseSoftLimit(true);
+		arm.enableReverseSoftLimit(false);
 	}
 
 	/**
@@ -185,7 +188,9 @@ public class Robot extends IterativeRobot {
 		rightSRX1.changeControlMode(TalonControlMode.MotionProfile);
 		leftSRX1.changeControlMode(TalonControlMode.MotionProfile);
 		arm.changeControlMode(TalonControlMode.Position);
+		arm.setPosition(0);
 		arm.set(0);
+		shooter1.set(0);
 	}
 
 	/**
@@ -204,259 +209,360 @@ public class Robot extends IterativeRobot {
 		// arm.setPosition(0);
 		rightSRX1.set(1);
 		leftSRX1.set(1);
-		rightSRX1.setF(3 / 1.5);
-		leftSRX1.setF(3 / 1.5);
+		rightSRX1.setF(4 / 1.5);
+		leftSRX1.setF(4 / 1.5);
 		leftSRX1.processMotionProfileBuffer();
 		rightSRX1.processMotionProfileBuffer();
-		if (arm.getControlMode().equals(TalonControlMode.MotionProfile)) {
-			arm.processMotionProfileBuffer();
-		}
+
 		switch (autoSelected) {
 		case rightGear:
-
-			if (autoCounter == 1) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < RightGearProfile.kNumPoints; x++) {
-					point.position = RightGearProfile.Points[x][0];
-					point.velocity = RightGearProfile.Points[x][1];
-					point.timeDurMs = (int) RightGearProfile.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = RightGearProfile.Points[x][0];
-					point.velocity = RightGearProfile.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if (autoCounter == RightGearProfile.kNumPoints) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < RightGearProfile2.kNumPoints; x++) {
-					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
-							+ RightGearProfile2.Points[x][0];
-					point.velocity = RightGearProfile2.Points[x][1];
-					point.timeDurMs = (int) RightGearProfile2.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < RightGearProfile3.kNumPoints; x++) {
-					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
-							+ RightGearProfile2.Points[RightGearProfile2.kNumPoints - 1][0]
-							+ RightGearProfile3.Points[x][0];
-					point.velocity = RightGearProfile3.Points[x][1];
-					point.timeDurMs = (int) RightGearProfile3.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
-							+ RightGearProfile3.Points[x][0];
-					point.velocity = RightGearProfile3.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
-					+ 50) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < RightGearProfile4.kNumPoints; x++) {
-					point.position = RightGearProfile4.Points[x][0];
-					point.velocity = RightGearProfile4.Points[x][1];
-					point.timeDurMs = (int) RightGearProfile4.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = RightGearProfile4.Points[x][0];
-					point.velocity = RightGearProfile4.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if (autoCounter < RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
-					+ 100) {
-				intake.set(-0.4);
-			}
-			// if(autoCounter ==
-			// RightGearProfile.kNumPoints+RightGearProfile2.kNumPoints){
-			// leftSRX1.clearMotionProfileTrajectories();
-			// rightSRX1.clearMotionProfileTrajectories();
-			// leftSRX1.clearIAccum();
-			// rightSRX1.clearIAccum();
-			// CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-			// for (int x = 0; x < RightGearProfile2.kNumPoints; x++) {
-			// point.position =
-			// RightGearProfile.Points[RightGearProfile.kNumPoints-1][0]+RightGearProfile2.Points[x][0];
-			// point.velocity = RightGearProfile2.Points[x][1];
-			// point.timeDurMs = (int) RightGearProfile2.Points[x][2];
-			// point.velocityOnly = false;
-			// rightSRX1.pushMotionProfileTrajectory(point);
-			// }
-			// }
+			rightGearAuto();
 			break;
 		case middleGear:
-			// Put custom auto code here
-			if (autoCounter == 1) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < MiddleGearProfile.kNumPoints; x++) {
-					point.position = MiddleGearProfile.Points[x][0];
-					point.velocity = MiddleGearProfile.Points[x][1];
-					point.timeDurMs = (int) MiddleGearProfile.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = MiddleGearProfile.Points[x][0];
-					point.velocity = MiddleGearProfile.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if (autoCounter == MiddleGearProfile.kNumPoints + 15) {
-				arm.changeControlMode(TalonControlMode.MotionProfile);
-				arm.clearMotionProfileTrajectories();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < GearArmProfile.kNumPoints; x++) {
-					point.position = GearArmProfile.Points[x][0];
-					point.velocity = GearArmProfile.Points[x][1];
-					point.timeDurMs = (int) GearArmProfile.Points[x][2];
-					point.velocityOnly = false;
-					arm.pushMotionProfileTrajectory(point);
-				}
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				for (int x = 0; x < RightGearProfile4.kNumPoints; x++) {
-					point.position = RightGearProfile4.Points[x][0];
-					point.velocity = RightGearProfile4.Points[x][1];
-					point.timeDurMs = (int) RightGearProfile4.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = RightGearProfile4.Points[x][0];
-					point.velocity = RightGearProfile4.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-//			if (autoCounter > MiddleGearProfile.kNumPoints + 15) {
-//				intake.set(-0.4);
-//			}
-
+			middleGearAuto();
 			break;
-		case sideShootAuto:
-			// Put default auto code here
-			if (autoCounter == 1) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				arm.set(-0.125);
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < MotionProfile.kNumPoints; x++) {
-					point.position = MotionProfile.Points[x][0];
-					point.velocity = MotionProfile.Points[x][1];
-					point.timeDurMs = (int) MotionProfile.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = MotionProfile.Points[x][0];
-					point.velocity = MotionProfile.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-				// rightSRX1.setPID(1, 0.000, 0);
-				// leftSRX1.setPID(1, 0.000, 0);
-			}
-			if (autoCounter == MotionProfile.kNumPoints + 25) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < MotionProfile2.kNumPoints; x++) {
-					point.position = MotionProfile2.Points[x][0];
-					point.velocity = MotionProfile2.Points[x][1];
-					point.timeDurMs = (int) MotionProfile2.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = -MotionProfile2.Points[x][0];
-					point.velocity = -MotionProfile2.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + 50) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < MotionProfile3.kNumPoints; x++) {
-					point.position = MotionProfile3.Points[x][0];
-					point.velocity = MotionProfile3.Points[x][1];
-					point.timeDurMs = (int) MotionProfile3.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = MotionProfile3.Points[x][0];
-					point.velocity = MotionProfile3.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints + 40) {
-				leftSRX1.clearMotionProfileTrajectories();
-				rightSRX1.clearMotionProfileTrajectories();
-				rightSRX1.setPosition(0);
-				leftSRX1.setPosition(0);
-				leftSRX1.clearIAccum();
-				rightSRX1.clearIAccum();
-				CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-				for (int x = 0; x < MotionProfile4.kNumPoints; x++) {
-					point.position = -1.9 * MotionProfile4.Points[x][0];
-					point.velocity = -1.9 * MotionProfile4.Points[x][1];
-					point.timeDurMs = (int) MotionProfile4.Points[x][2];
-					point.velocityOnly = false;
-					rightSRX1.pushMotionProfileTrajectory(point);
-					point.position = 0.2 * MotionProfile4.Points[x][0];
-					point.velocity = 0.2 * MotionProfile4.Points[x][1];
-					leftSRX1.pushMotionProfileTrajectory(point);
-				}
-			}
-			if(autoCounter >= MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints +MotionProfile4.kNumPoints+ 40){
-				shooter1.changeControlMode(TalonControlMode.Speed);
-				shooter1.set(1200);
-			}
-			if(shooter1.getSpeed() >= 1200){
-				index.set(1);
-				arm.set(0);
-			}
-			// rightSRX1.set(1);
-			// rightSRX1.processMotionProfileBuffer();
-			SmartDashboard.putNumber("Position", rightSRX1.getPosition());
+		case sideShoot:
+			sideShootAuto();
+			break;
+		case leftGear:
+			leftGearAuto();
 			break;
 		}
+	}
+
+	public void rightGearAuto() {
+		if (autoCounter == 1) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile.kNumPoints; x++) {
+				point.position = RightGearProfile.Points[x][0];
+				point.velocity = RightGearProfile.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = RightGearProfile.Points[x][0];
+				point.velocity = RightGearProfile.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == RightGearProfile.kNumPoints) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile2.kNumPoints; x++) {
+				point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+						+ RightGearProfile2.Points[x][0];
+				point.velocity = RightGearProfile2.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile2.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile3.kNumPoints; x++) {
+				point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+						+ RightGearProfile2.Points[RightGearProfile2.kNumPoints - 1][0]
+						+ RightGearProfile3.Points[x][0];
+				point.velocity = RightGearProfile3.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile3.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+						+ RightGearProfile3.Points[x][0];
+				point.velocity = RightGearProfile3.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
+				+ 50) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile4.kNumPoints; x++) {
+				point.position = RightGearProfile4.Points[x][0];
+				point.velocity = RightGearProfile4.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile4.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = RightGearProfile4.Points[x][0];
+				point.velocity = RightGearProfile4.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter > RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
+				+ 75) {
+			intake.set(-0.3);
+		} else {
+			intake.set(0);
+		}
+		if (autoCounter > RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints + 75
+				&& arm.getPosition() < 0.1) {
+			arm.changeControlMode(TalonControlMode.PercentVbus);
+			arm.set(-0.1);
+		} else {
+			arm.set(0);
+		}
+	}
+
+	public void leftGearAuto() {
+		if (autoCounter == 1) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile.kNumPoints; x++) {
+				point.position = RightGearProfile.Points[x][0];
+				point.velocity = RightGearProfile.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = RightGearProfile.Points[x][0];
+				point.velocity = RightGearProfile.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == RightGearProfile.kNumPoints) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile2.kNumPoints; x++) {
+				point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+						+ RightGearProfile2.Points[x][0];
+				point.velocity = RightGearProfile2.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile2.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile3.kNumPoints; x++) {
+				point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+						+ RightGearProfile2.Points[RightGearProfile2.kNumPoints - 1][0]
+						+ RightGearProfile3.Points[x][0];
+				point.velocity = RightGearProfile3.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile3.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = RightGearProfile.Points[RightGearProfile.kNumPoints - 1][0]
+						+ RightGearProfile3.Points[x][0];
+				point.velocity = RightGearProfile3.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
+				+ 50) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < RightGearProfile4.kNumPoints; x++) {
+				point.position = RightGearProfile4.Points[x][0];
+				point.velocity = RightGearProfile4.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile4.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = RightGearProfile4.Points[x][0];
+				point.velocity = RightGearProfile4.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter > RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints
+				+ 75) {
+			intake.set(-0.3);
+		} else {
+			intake.set(0);
+		}
+		if (autoCounter > RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + RightGearProfile3.kNumPoints + 75
+				&& arm.getPosition() < 0.1) {
+			arm.changeControlMode(TalonControlMode.PercentVbus);
+			arm.set(-0.1);
+		} else
+			arm.set(0);
+	}
+
+	public void middleGearAuto() {
+		if (autoCounter == 1) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < MiddleGearProfile.kNumPoints; x++) {
+				point.position = MiddleGearProfile.Points[x][0];
+				point.velocity = MiddleGearProfile.Points[x][1];
+				point.timeDurMs = (int) MiddleGearProfile.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = MiddleGearProfile.Points[x][0];
+				point.velocity = MiddleGearProfile.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter > MiddleGearProfile.kNumPoints + 50 && arm.getPosition() < 0.08) {
+			arm.changeControlMode(TalonControlMode.PercentVbus);
+			arm.set(-0.1);
+		} else {
+			arm.set(0);
+		}
+		if (autoCounter == MiddleGearProfile.kNumPoints + 15) {
+			arm.changeControlMode(TalonControlMode.MotionProfile);
+			arm.clearMotionProfileTrajectories();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < GearArmProfile.kNumPoints; x++) {
+				point.position = GearArmProfile.Points[x][0];
+				point.velocity = GearArmProfile.Points[x][1];
+				point.timeDurMs = (int) GearArmProfile.Points[x][2];
+				point.velocityOnly = false;
+				arm.pushMotionProfileTrajectory(point);
+			}
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			for (int x = 0; x < RightGearProfile4.kNumPoints; x++) {
+				point.position = RightGearProfile4.Points[x][0];
+				point.velocity = RightGearProfile4.Points[x][1];
+				point.timeDurMs = (int) RightGearProfile4.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = RightGearProfile4.Points[x][0];
+				point.velocity = RightGearProfile4.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter > MiddleGearProfile.kNumPoints + 50) {
+			intake.set(-0.3);
+		} else {
+			intake.set(0);
+		}
+
+	}
+
+	public void sideShootAuto() {
+		if (autoCounter == 1) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			// arm.set(-0.125);
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < MotionProfile.kNumPoints; x++) {
+				point.position = MotionProfile.Points[x][0];
+				point.velocity = MotionProfile.Points[x][1];
+				point.timeDurMs = (int) MotionProfile.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = MotionProfile.Points[x][0];
+				point.velocity = MotionProfile.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+			// rightSRX1.setPID(1, 0.000, 0);
+			// leftSRX1.setPID(1, 0.000, 0);
+		}
+		if (autoCounter == MotionProfile.kNumPoints + 25) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < MotionProfile2.kNumPoints; x++) {
+				point.position = MotionProfile2.Points[x][0];
+				point.velocity = MotionProfile2.Points[x][1];
+				point.timeDurMs = (int) MotionProfile2.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = -MotionProfile2.Points[x][0];
+				point.velocity = -MotionProfile2.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + 50) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < MotionProfile3.kNumPoints; x++) {
+				point.position = MotionProfile3.Points[x][0];
+				point.velocity = MotionProfile3.Points[x][1];
+				point.timeDurMs = (int) MotionProfile3.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = MotionProfile3.Points[x][0];
+				point.velocity = MotionProfile3.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter == MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints + 40) {
+			leftSRX1.clearMotionProfileTrajectories();
+			rightSRX1.clearMotionProfileTrajectories();
+			rightSRX1.setPosition(0);
+			leftSRX1.setPosition(0);
+			leftSRX1.clearIAccum();
+			rightSRX1.clearIAccum();
+			CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
+			for (int x = 0; x < MotionProfile4.kNumPoints; x++) {
+				point.position = -1.9 * MotionProfile4.Points[x][0];
+				point.velocity = -1.9 * MotionProfile4.Points[x][1];
+				point.timeDurMs = (int) MotionProfile4.Points[x][2];
+				point.velocityOnly = false;
+				rightSRX1.pushMotionProfileTrajectory(point);
+				point.position = 0.2 * MotionProfile4.Points[x][0];
+				point.velocity = 0.2 * MotionProfile4.Points[x][1];
+				leftSRX1.pushMotionProfileTrajectory(point);
+			}
+		}
+		if (autoCounter >= MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints
+				+ MotionProfile4.kNumPoints + 40) {
+			shooter1.changeControlMode(TalonControlMode.Speed);
+			shooter1.set(1200);
+		}
+		if (shooter1.getSpeed() >= 1200) {
+			index.set(1);
+			arm.set(0);
+		}
+		// rightSRX1.set(1);
+		// rightSRX1.processMotionProfileBuffer();
+		SmartDashboard.putNumber("Position", rightSRX1.getPosition());
 	}
 
 	/**
@@ -464,26 +570,20 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopInit() {
-		// rightSRX.changeControlMode(TalonControlMode.PercentVbus); // Changes
-		// to
-		// % Voltage
-		// visionThread.setDaemon(true);
-		// visionThread.run();
 		shooter1.changeControlMode(TalonControlMode.PercentVbus);
 		arm.changeControlMode(TalonControlMode.PercentVbus);
 		shooterToggle = false;
 		intakeToggle = false;
 		shooterSpeed = 600;
-		// leftSRX3.changeControlMode(TalonControlMode.Follower);
 		leftSRX2.changeControlMode(TalonControlMode.Follower);
-		// leftSRX3.set(leftSRX1.getDeviceID());
 		leftSRX2.set(leftSRX1.getDeviceID());
-		// rightSRX3.changeControlMode(TalonControlMode.Follower);
 		rightSRX2.changeControlMode(TalonControlMode.Follower);
-		// rightSRX3.set(rightSRX1.getDeviceID());
 		rightSRX2.set(rightSRX1.getDeviceID());
 		rightSRX1.changeControlMode(TalonControlMode.Speed);
 		leftSRX1.changeControlMode(TalonControlMode.Speed);
+		arm.enableForwardSoftLimit(false);
+		arm.enableReverseSoftLimit(false);
+		CameraServer.getInstance().startAutomaticCapture();
 	}
 
 	public void teleopPeriodic() {
@@ -497,30 +597,41 @@ public class Robot extends IterativeRobot {
 		// SmartDashboard.putNumber("RightX1", rightX1);
 		// SmartDashboard.putNumber("right output",
 		// rightSRX1.getOutputVoltage());
-		if (buttonB1 != buttonBLast1 && buttonB1) {// Checks if button A was
+		if (buttonX2 != buttonXLast2 && buttonX2 && !shooterToggle) {// Checks
+																		// if
+																		// button
+																		// A was
 			// clicked shooterToggle =
 			// !shooterToggle;
 			// System.out.println("ShooterToggle: " + shooterToggle);
+			shooterToggle = !shooterToggle;
+		} else if (buttonB2 != buttonBLast2 && buttonB2 && shooterToggle) {
 			shooterToggle = !shooterToggle;
 		}
 		// if (buttonRB2 != buttonRBLast2 && buttonRB2) {
 		// intakeToggle = !intakeToggle;
 		// }
-		if (buttonLB1) {
-			intake.set(1);
-		} else if (buttonRB1) {
-			intake.set(-1);
+		// if (buttonLB1) {
+		// intake.set(1);
+		// } else if (buttonRB1) {
+		// intake.set(-1);
+		// } else {
+		// intake.set(0);
+		// }
+		if (Math.abs(rightY2) > 0.2) {
+			intake.set(rightY2);
 		} else {
 			intake.set(0);
 		}
 
 		//
-		arm.changeControlMode(TalonControlMode.Position);
-		if (Math.abs(rightTrigger1 - leftTrigger1) > 0.2) {
-			arm.changeControlMode(TalonControlMode.PercentVbus);
-			arm.set((rightTrigger1 - leftTrigger1) / 3);
+		arm.changeControlMode(TalonControlMode.PercentVbus);
+		if (buttonY2) {
+			placeGear();
+		} else if (Math.abs(rightTrigger2 - leftTrigger2) > 0.2) {
+			arm.set((rightTrigger2 - leftTrigger2) / 2.3);
 		} else {
-			arm.set(0.033);
+			arm.set(0.045);
 		}
 
 		/*
@@ -565,8 +676,17 @@ public class Robot extends IterativeRobot {
 		} else {
 			rightSpeed = Math.pow(Math.abs(-leftY1 - rightX1), 2);
 		}
-		leftSRX1.set(leftSpeed * MaxRPM);
-		rightSRX1.set(rightSpeed * MaxRPM);
+		if (buttonDPad2 == 0) {
+			leftSRX1.set(0);
+			rightSRX1.changeControlMode(TalonControlMode.PercentVbus);
+			rightSRX1.set(rightSpeed);
+		} else {
+			leftSRX1.changeControlMode(TalonControlMode.Speed);
+			rightSRX1.changeControlMode(TalonControlMode.Speed);
+			leftSRX1.set(leftSpeed * MaxRPM);
+			rightSRX1.set(rightSpeed * MaxRPM);
+		}
+
 		// System.out.println();
 		if (buttonA1) {
 			index.set(1);
@@ -574,7 +694,13 @@ public class Robot extends IterativeRobot {
 			index.set(-1);
 		} else {
 			index.set(0);
-		}			SmartDashboard.putNumber("Shooter RPM", shooter1.getSpeed());
+		}
+		if (Math.abs(rightTrigger1 - leftTrigger1) > 0.2) {
+			index.set(rightTrigger1 - leftTrigger1);
+		} else {
+			index.set(0);
+		}
+		SmartDashboard.putNumber("Shooter RPM", shooter1.getSpeed());
 		if (shooterToggle) {
 			// shooter1.changeControlMode(TalonControlMode.Speed);
 			// shooter1.set(shooterSpeed);
@@ -752,17 +878,17 @@ public class Robot extends IterativeRobot {
 		buttonLeftStickClickLast1 = buttonLeftStickClick1;
 		buttonRightStickClickLast1 = buttonRightStickClick1;
 		buttonDPadLast1 = buttonDPad1;
-		// buttonALast2 = buttonA2;
-		// buttonBLast2 = buttonB2;
-		// buttonXLast2 = buttonX2;
-		// buttonYLast2 = buttonY2;
-		// buttonLBLast2 = buttonLB2;
-		// buttonRBLast2 = buttonRB2;
-		// buttonBackLast2 = buttonBack2;
-		// buttonStartLast2 = buttonStart2;
-		// buttonLeftStickClickLast2 = buttonLeftStickClick2;
-		// buttonRightStickClickLast2 = buttonRightStickClick2;
-		// buttonDPadLast2 = buttonDPad2;
+		buttonALast2 = buttonA2;
+		buttonBLast2 = buttonB2;
+		buttonXLast2 = buttonX2;
+		buttonYLast2 = buttonY2;
+		buttonLBLast2 = buttonLB2;
+		buttonRBLast2 = buttonRB2;
+		buttonBackLast2 = buttonBack2;
+		buttonStartLast2 = buttonStart2;
+		buttonLeftStickClickLast2 = buttonLeftStickClick2;
+		buttonRightStickClickLast2 = buttonRightStickClick2;
+		buttonDPadLast2 = buttonDPad2;
 	}
 
 	private void getInputs() {
@@ -783,22 +909,28 @@ public class Robot extends IterativeRobot {
 		buttonLeftStickClick1 = joystick1.getRawButton(9);
 		buttonRightStickClick1 = joystick1.getRawButton(10);
 		buttonDPad1 = joystick1.getPOV();
-		// leftX2 = joystick2.getRawAxis(0);
-		// leftY2 = joystick2.getRawAxis(2);
-		// rightX2 = joystick2.getRawAxis(4);
-		// rightY2 = joystick2.getRawAxis(5);
-		// leftTrigger2 = joystick2.getRawAxis(2);
-		// rightTrigger2 = joystick2.getRawAxis(3);
-		// buttonA2 = joystick2.getRawButton(1);
-		// buttonB2 = joystick2.getRawButton(2);
-		// buttonX2 = joystick2.getRawButton(3);
-		// buttonY2 = joystick2.getRawButton(4);
-		// buttonLB2 = joystick2.getRawButton(5);
-		// buttonRB2 = joystick2.getRawButton(6);
-		// buttonBack2 = joystick2.getRawButton(7);
-		// buttonStart2 = joystick2.getRawButton(8);
-		// buttonLeftStickClick2 = joystick2.getRawButton(9);
-		// buttonRightStickClick2 = joystick2.getRawButton(10);
-		// buttonDPad2 = joystick2.getPOV();
+		leftX2 = joystick2.getRawAxis(0);
+		leftY2 = joystick2.getRawAxis(2);
+		rightX2 = joystick2.getRawAxis(4);
+		rightY2 = joystick2.getRawAxis(5);
+		leftTrigger2 = joystick2.getRawAxis(2);
+		rightTrigger2 = joystick2.getRawAxis(3);
+		buttonA2 = joystick2.getRawButton(1);
+		buttonB2 = joystick2.getRawButton(2);
+		buttonX2 = joystick2.getRawButton(3);
+		buttonY2 = joystick2.getRawButton(4);
+		buttonLB2 = joystick2.getRawButton(5);
+		buttonRB2 = joystick2.getRawButton(6);
+		buttonBack2 = joystick2.getRawButton(7);
+		buttonStart2 = joystick2.getRawButton(8);
+		buttonLeftStickClick2 = joystick2.getRawButton(9);
+		buttonRightStickClick2 = joystick2.getRawButton(10);
+		buttonDPad2 = joystick2.getPOV();
+	}
+
+	private void placeGear() {
+		arm.changeControlMode(TalonControlMode.PercentVbus);
+		arm.set(-0.1);
+		intake.set(-0.3);
 	}
 }
