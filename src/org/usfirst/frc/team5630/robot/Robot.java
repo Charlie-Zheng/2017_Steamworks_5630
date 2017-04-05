@@ -335,7 +335,7 @@ public class Robot extends IterativeRobot
 		}
 		if (autoCounter == 2 && headingController.onTarget()) {
 			autoCounter++;
-			drive(0.0, 0.0);
+			drive(0.0, 60.0);
 			System.out.println("Finished 2nd drive");
 		}
 		/*
