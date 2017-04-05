@@ -29,15 +29,12 @@ public class Robot extends IterativeRobot
 	final String leftGear = "Left Gear";
 	final double DeadZone = 0.215;
 	int startEncoderTicks;
-	double P = 3;
-	double I = 0.02;
-	double D = 0;
-	double F = 0;
 	String autoSelected;
 	final int MaxRPM = 450;
 	SendableChooser<String> chooser = new SendableChooser<>();
-	CANTalon shooter1, shooter2;
+//	CANTalon shooter1, shooter2;
 	CANTalon leftSRX1, rightSRX1, leftSRX2, rightSRX2;
+	CANTalon leftSRX3, rightSRX3;
 	CANTalon intake, index, arm;
 	Joystick joystick1, joystick2;
 	double rightX1, rightY1, leftTrigger1, rightTrigger1, leftX1, leftY1;
@@ -74,12 +71,12 @@ public class Robot extends IterativeRobot
 		leftSRX2 = new CANTalon(2);
 		leftSRX2.enableBrakeMode(true);
 		// leftSRX3 = new CANTalon(3);
-		shooter1 = new CANTalon(5);
-		shooter1.enableBrakeMode(false);
+		leftSRX3 = new CANTalon(5);
+		leftSRX3.enableBrakeMode(true);
 		arm = new CANTalon(4);
 		arm.enableBrakeMode(true);
-		shooter2 = new CANTalon(6);
-		shooter2.enableBrakeMode(false);
+		rightSRX3 = new CANTalon(6);
+		rightSRX3.enableBrakeMode(true);
 		rightSRX1 = new CANTalon(8);
 		rightSRX1.enableBrakeMode(true);
 		rightSRX2 = new CANTalon(7);
@@ -94,28 +91,32 @@ public class Robot extends IterativeRobot
 		// intakeMotor.setInverted(true);
 		arm.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		arm.configEncoderCodesPerRev(4096);
-		shooter1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-		shooter1.configEncoderCodesPerRev(4096);
+		// // shooter1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+		// // shooter1.configEncoderCodesPerRev(4096);
 		leftSRX1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		leftSRX1.configEncoderCodesPerRev(180);
 		leftSRX1.enableBrakeMode(true);
 		leftSRX2.enableBrakeMode(true);
-		// leftSRX3.enableBrakeMode(true);
+		leftSRX3.enableBrakeMode(true);
 		// System.out.println("F is: " + leftSRX1.getF());
 		leftSRX1.setPID(1, 0.0011, 0);
 		leftSRX1.reverseSensor(true);
 		leftSRX1.setInverted(true);
-		leftSRX1.reverseOutput(false);
+		leftSRX1.setInverted(true);
+		leftSRX2.setInverted(true);
+		leftSRX3.reverseOutput(false);
 		leftSRX2.reverseOutput(false);
-		// leftSRX3.reverseOutput(false);
+		leftSRX3.reverseOutput(false);
 		rightSRX1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		rightSRX1.configEncoderCodesPerRev(180);
 		rightSRX1.setPID(1, 0.0011, 0);
 		rightSRX1.reverseSensor(false);
 		rightSRX1.setInverted(false);
+		rightSRX2.setInverted(false);
+		rightSRX3.setInverted(false);
 		rightSRX1.reverseOutput(true);
 		rightSRX2.reverseOutput(false);
-		// rightSRX3.reverseOutput(false);
+		rightSRX3.reverseOutput(false);
 		arm.setInverted(true);
 		arm.reverseSensor(false);
 		arm.configEncoderCodesPerRev(4096);
@@ -126,31 +127,38 @@ public class Robot extends IterativeRobot
 		intake.setInverted(false);
 		index.setInverted(true);
 
-		shooter1.setInverted(false);
-		shooter2.setInverted(false);
-		shooter1.reverseOutput(true);
-		shooter1.reverseSensor(true);
+//		// shooter1.setInverted(false);
+//		shooter2.setInverted(false);
+//		// shooter1.reverseOutput(true);
+//		// shooter1.reverseSensor(true);
 		arm.configPeakOutputVoltage(4, -4);
 		rightSRX1.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX2.configPeakOutputVoltage(12.0f, -12.0f);
+		rightSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		leftSRX1.configPeakOutputVoltage(12.0f, -12.0f);
 		leftSRX2.configPeakOutputVoltage(12.0f, -12.0f);
+		leftSRX3.configPeakOutputVoltage(12.0f, -12.0f);
 		rightSRX1.setVoltageRampRate(100);
 		rightSRX2.setVoltageRampRate(100);
+		rightSRX3.setVoltageRampRate(100);
 		leftSRX1.setVoltageRampRate(100);
 		leftSRX2.setVoltageRampRate(100);
-		shooter1.configPeakOutputVoltage(0, -8.0);
-		shooter2.configPeakOutputVoltage(0, -8.0);
+		rightSRX3.setVoltageRampRate(100);
+//		// shooter1.configPeakOutputVoltage(0, -8.0);
+//		shooter2.configPeakOutputVoltage(0, -8.0);
 		numberOfPWMisZeroinARow = 0;
 		leftSRX2.changeControlMode(TalonControlMode.Follower);
-
 		leftSRX2.set(leftSRX1.getDeviceID());
 		rightSRX2.changeControlMode(TalonControlMode.Follower);
 		rightSRX2.set(rightSRX1.getDeviceID());
-		shooter1.changeControlMode(TalonControlMode.Speed);
-
-		shooter2.changeControlMode(TalonControlMode.Follower);
-		shooter2.set(shooter1.getDeviceID());
+		leftSRX3.changeControlMode(TalonControlMode.Follower);
+		leftSRX3.set(leftSRX1.getDeviceID());
+		rightSRX3.changeControlMode(TalonControlMode.Follower);
+		rightSRX3.set(rightSRX1.getDeviceID());
+//		// shooter1.changeControlMode(TalonControlMode.Speed);
+//
+//		shooter2.changeControlMode(TalonControlMode.Follower);
+//		shooter2.set(// shooter1.getDeviceID());
 		arm.setPosition(0);
 		arm.setForwardSoftLimit(0.125);
 		arm.enableForwardSoftLimit(false);
@@ -180,7 +188,7 @@ public class Robot extends IterativeRobot
 		arm.changeControlMode(TalonControlMode.Position);
 		arm.setPosition(0);
 		arm.set(0);
-		shooter1.set(0);
+		// shooter1.set(0);
 	}
 
 	/**
@@ -227,11 +235,15 @@ public class Robot extends IterativeRobot
 		{
 			addMotionProfileMotor(RightGearProfile.Points);
 		}
-		if (autoCounter == RightGearProfile.kNumPoints) // Turns around 30 degrees to the right
+		if (autoCounter == RightGearProfile.kNumPoints) // Turns around 30
+														// degrees to the right
 		{
 			addMotionProfileMotor(RightGearProfile2.Points, rightSRX1);
 		}
-		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25)//Goes forwards to peg
+		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25)// Goes
+																							// forwards
+																							// to
+																							// peg
 		{
 			addMotionProfileMotor(RightGearProfile3.Points);
 		}
@@ -265,11 +277,15 @@ public class Robot extends IterativeRobot
 		{
 			addMotionProfileMotor(RightGearProfile.Points);
 		}
-		if (autoCounter == RightGearProfile.kNumPoints) //Turns 30 degrees to the left
+		if (autoCounter == RightGearProfile.kNumPoints) // Turns 30 degrees to
+														// the left
 		{
 			addMotionProfileMotor(RightGearProfile2.Points, leftSRX1);
 		}
-		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25)//Goes forwards to peg
+		if (autoCounter == RightGearProfile.kNumPoints + RightGearProfile2.kNumPoints + 25)// Goes
+																							// forwards
+																							// to
+																							// peg
 		{
 			addMotionProfileMotor(RightGearProfile3.Points);
 		}
@@ -422,14 +438,14 @@ public class Robot extends IterativeRobot
 		if (autoCounter >= MotionProfile.kNumPoints + MotionProfile2.kNumPoints + MotionProfile3.kNumPoints
 				+ MotionProfile4.kNumPoints + 40)
 		{
-			shooter1.changeControlMode(TalonControlMode.Speed);
-			shooter1.set(1200);
+			// shooter1.changeControlMode(TalonControlMode.Speed);
+			// shooter1.set(1200);
 		}
-		if (shooter1.getSpeed() >= 1200)
-		{
-			index.set(1);
-			arm.set(0);
-		}
+//		if (shooter1.getSpeed() >= 1200)
+//		{
+//			index.set(1);
+//			arm.set(0);
+//		}
 		// rightSRX1.set(1);
 		// rightSRX1.processMotionProfileBuffer();
 		SmartDashboard.putNumber("Position", rightSRX1.getPosition());
@@ -441,15 +457,11 @@ public class Robot extends IterativeRobot
 	@Override
 	public void teleopInit()
 	{
-		shooter1.changeControlMode(TalonControlMode.PercentVbus);
+//		// shooter1.changeControlMode(TalonControlMode.PercentVbus);
 		arm.changeControlMode(TalonControlMode.PercentVbus);
 		shooterToggle = false;
 		intakeToggle = false;
 		shooterSpeed = 600;
-		leftSRX2.changeControlMode(TalonControlMode.Follower);
-		leftSRX2.set(leftSRX1.getDeviceID());
-		rightSRX2.changeControlMode(TalonControlMode.Follower);
-		rightSRX2.set(rightSRX1.getDeviceID());
 		rightSRX1.changeControlMode(TalonControlMode.Speed);
 		leftSRX1.changeControlMode(TalonControlMode.Speed);
 		arm.enableForwardSoftLimit(false);
@@ -460,8 +472,8 @@ public class Robot extends IterativeRobot
 	public void teleopPeriodic()
 	{
 		getInputs(); // Gets joystick inputs
-		shooter1.setF(0.01);
-		shooter1.setPID(0.1, 0.003, 0.00000);
+//		 // shooter1.setF(0.01);
+//		 // shooter1.setPID(0.1, 0.003, 0.00000);
 		SmartDashboard.putNumber("ArmPosition", arm.getPosition());
 		if (buttonX2 != buttonXLast2 && buttonX2 && !shooterToggle) // Checks if
 																	// button A
@@ -559,22 +571,23 @@ public class Robot extends IterativeRobot
 		{
 			index.set(0);
 		}
-		SmartDashboard.putNumber("Shooter RPM", shooter1.getSpeed());
+	//	SmartDashboard.putNumber("Shooter RPM", shooter1.getSpeed());
 		if (shooterToggle)
 		{
-			shooter1.changeControlMode(TalonControlMode.Speed);
+			// shooter1.changeControlMode(TalonControlMode.Speed);
 			System.out.println("Shooting");
-			shooter1.set(shooterSpeed);
-			SmartDashboard.putNumber("Shooter Voltage", shooter1.getOutputVoltage());
+			// shooter1.set(shooterSpeed);
+//			SmartDashboard.putNumber("Shooter Voltage",shooter1.getOutputVoltage());
 		} else
 		{
-			shooter1.set(0);
-			shooter1.clearIAccum();
+			// shooter1.set(0);
+			// shooter1.clearIAccum();
 		}
-//		System.out.println("Left Encoder: " + leftSRX1.getEncPosition());
-//		System.out.println("Right Encoder:" + rightSRX1.getEncPosition());
+		// System.out.println("Left Encoder: " + leftSRX1.getEncPosition());
+		// System.out.println("Right Encoder:" + rightSRX1.getEncPosition());
 		getLastInputs();
 	}
+
 	/**
 	 * This function is called periodically during test mode
 	 */
