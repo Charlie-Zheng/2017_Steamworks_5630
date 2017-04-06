@@ -42,7 +42,7 @@ public class Robot extends IterativeRobot
 	// CANTalon shooter1, shooter2;
 	CANTalon leftSRX1, rightSRX1, leftSRX2, rightSRX2;
 	CANTalon leftSRX3, rightSRX3;
-	CANTalon intake, index, arm;
+	CANTalon intake, arm;
 	Joystick joystick1, joystick2;
 	double rightX1, rightY1, leftTrigger1, rightTrigger1, leftX1, leftY1;
 	boolean buttonA1, buttonB1, buttonX1, buttonY1, buttonRB1, buttonLB1, buttonLeftStickClick1, buttonRightStickClick1,
@@ -98,7 +98,7 @@ public class Robot extends IterativeRobot
 		leftSRX2 = new CANTalon(2);
 		leftSRX2.enableBrakeMode(true);
 		// leftSRX3 = new CANTalon(3);
-		leftSRX3 = new CANTalon(5);
+		leftSRX3 = new CANTalon(3);
 		leftSRX3.enableBrakeMode(true);
 		arm = new CANTalon(4);
 		arm.enableBrakeMode(true);
@@ -111,8 +111,8 @@ public class Robot extends IterativeRobot
 		// rightSRX3 = new CANTalon(9);
 		intake = new CANTalon(9);
 		intake.enableBrakeMode(false);
-		index = new CANTalon(3);
-		index.enableBrakeMode(false);
+		//index = new CANTalon(3);
+		//index.enableBrakeMode(false);
 		joystick1 = new Joystick(0);
 		joystick2 = new Joystick(1);
 		// intakeMotor.setInverted(true);
@@ -155,7 +155,7 @@ public class Robot extends IterativeRobot
 		arm.setIZone(150);
 		arm.setF(0);
 		intake.setInverted(false);
-		index.setInverted(true);
+		//index.setInverted(true);
 
 		// // shooter1.setInverted(false);
 		// shooter2.setInverted(false);
@@ -590,7 +590,7 @@ public class Robot extends IterativeRobot
 	// }
 	//// if (shooter1.getSpeed() >= 1200)
 	//// {
-	//// index.set(1);
+	//// //index.set(1);
 	//// arm.set(0);
 	//// }
 	// // rightSRX1.set(1);
@@ -711,20 +711,20 @@ public class Robot extends IterativeRobot
 		}
 		if (buttonA1)
 		{
-			index.set(1);
+			//index.set(1);
 		} else if (buttonX1)
 		{
-			index.set(-1);
+			//index.set(-1);
 		} else
 		{
-			index.set(0);
+			//index.set(0);
 		}
 		if (Math.abs(rightTrigger1 - leftTrigger1) > 0.2)
 		{
-			index.set(rightTrigger1 - leftTrigger1);
+			//index.set(rightTrigger1 - leftTrigger1);
 		} else
 		{
-			index.set(0);
+			//index.set(0);
 		}
 		// SmartDashboard.putNumber("Shooter RPM", shooter1.getSpeed());
 		// if (shooterToggle)
