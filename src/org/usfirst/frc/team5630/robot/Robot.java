@@ -628,11 +628,11 @@ public class Robot extends IterativeRobot
 		{
 			rightSpeed = Math.pow(Math.abs(-leftY1 - rightX1), 2);
 		}
-		if (buttonDPad2 == 0)
+		if (rightTrigger1 > 0.3)
 		{
 			leftSRX1.set(0);
 			rightSRX1.changeControlMode(TalonControlMode.PercentVbus);
-			rightSRX1.set(rightSpeed/3);
+			rightSRX1.set(rightSpeed/(3*rightTrigger1));
 		} else
 		{
 			leftSRX1.changeControlMode(TalonControlMode.Speed);
