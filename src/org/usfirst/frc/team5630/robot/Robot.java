@@ -632,7 +632,7 @@ public class Robot extends IterativeRobot
 		{
 			leftSRX1.set(0);
 			rightSRX1.changeControlMode(TalonControlMode.PercentVbus);
-			rightSRX1.set(rightSpeed);
+			rightSRX1.set(rightSpeed/3);
 		} else
 		{
 			leftSRX1.changeControlMode(TalonControlMode.Speed);
